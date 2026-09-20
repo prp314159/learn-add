@@ -76,7 +76,7 @@ So the whole app is one scene (drawn here with counters; "apples" below means wh
   group first. Nine single hops in a second would be a blur. A group that moves as one shows "a group
   and a group", and treats 4 as one amount. Only his own taps move apples one by one.
 - **Knowing the answer is never punished with waiting.** When he answers without the tray, the slide and
-  the read-back take about 4 seconds in total.
+  the read-back take 3 to 4 seconds in total.
 - **One tap = one thing = one number.** This is the core counting skill, and the hop enforces it. Fast taps
   are queued, so apples always hop one at a time, in rhythm. Tapping is also easier than dragging.
 - **Touching is counting.** Five year olds count by touching. In "How many?" a tap on an apple that is
@@ -119,8 +119,7 @@ So numbers on the apples are the last step of the help, never the default:
 - **First miss: a nudge, not the answer.** No buzzer, no red cross, just a soft boop. Any apples still at
   the top slide onto the tray as groups, then all of them bounce slowly one at a time with notes only. He
   counts along and tries again.
-- **Second miss: show how to find out.** The same bounce, now with the numbers (1, 2, 3, 4, 5), which
-  are also said aloud. He tries again.
+- **Second miss: show how to find out.** The same bounce, now with the numbers (1, 2, 3, 4, 5). He tries again.
 - **Guessing must stay slower than counting.** A wrong try costs nothing, so time is the only thing that
   makes counting the better deal. The recount is slow: about one apple per second up to 5, quicker for
   bigger totals, and never more than about 6 seconds in all. The number row does nothing while it runs,
@@ -130,47 +129,36 @@ So numbers on the apples are the last step of the help, never the default:
   with one big `5` over the whole tray. Otherwise "5" can look like the name of the fifth apple. Play
   shows no numbers on apples at all: its tray keeps regrouping by colour, so a `5` that popped on a
   landing apple could end up sitting in place 3. The total in the sentence (`= 5`) pulses instead.
-- **Right answer reads the sentence back.** Two to three seconds: the `3` pulses together with the red
-  apples, then the `2` with the yellow ones, then the `5` with the whole tray, and each beat is said
-  aloud: "three", "and two", "make five". This is the one place where the symbols and the words get tied
-  to the things, so it happens every time.
+- **Right answer reads the sentence back.** About two seconds: the `3` pulses together with the red
+  apples, then the `2` with the yellow ones, then the `5` with the whole tray. This is the one place where
+  the symbols get tied to the things, so it happens every time.
 - **A solved sum always earns its star**, even after a miss. A wrong try never costs him anything.
 
-## Sound first, and a few spoken words
+## Sound, not voice
 
 - Small synthesised sounds made in the browser (no audio files): a note per count, a happy chord for a
   right answer, a soft "boop" for try again.
 - The scale has five notes (C D E G A) and then repeats one octave higher. The bottom row of the tray
   sounds like the top row again, so "6 is 5 and 1" can be heard as well as seen.
 - The child counts aloud themself. That beats any voice the app could play.
-- **The device's own voice speaks in two places only**, where the words are the thing being taught and
-  not decoration. The first version had no voice at all, because a computer voice reading out
-  instructions is dull. But the read-back was a silent pause shaped exactly like a sentence, and when he
-  plays alone nobody fills it.
-  - *The read-back after a right answer:* "three, and two, make five", said in one breath so the
-    sentence keeps its natural tune. The pulses follow the voice: each beat starts as the voice gets to
-    its part, so each word lands with its numeral and its group. The wording is "and / make" because it
-    says what the objects do. "Plus / equals" are the names of the signs and can come later: it is one
-    line in the script (`SAYING`).
-  - *The numbered count after a second miss:* "one, two, three", and the last number once more with the
-    big numeral, because it means all of them.
-  - Never on his own hops in "How many?", because a spoken count does the thinking for him just as a
-    popping number would. Not on Play landings either: fast taps would make a voice stutter and lag.
-  - No files and no internet: it is the browser's speech synthesis. Nothing in the app needs the voice
-    to be understood, and a voice that does not start never slows the game down. The notes under the
-    read-back play more quietly while the voice speaks.
-- A parent's own voice still beats the device's. Optional: record "one" to "ten" on a phone and drop the
-  ten files into a `sounds/` folder. If they exist, the app uses them for the number words in the
-  numbered count, and also says the new total on every landing in Play. No recording feature inside the
-  app.
+- Number words are the heart of counting, and notes do not carry them. If he often plays alone: a parent
+  records "one" to "ten" on a phone and drops the ten files into a `sounds/` folder. If they exist, the
+  app plays them where it would also show a number: in Play for the new total on every landing, and in
+  the numbered count after a second miss. Never on his own hops in "How many?", because a spoken count
+  does the thinking for him just as a popping number would. No recording feature inside the app.
+- **A device voice was tried and switched off.** The read-back is a silent pause shaped like a sentence,
+  so one version said "three, and two, make five" there with the browser's speech synthesis, and counted
+  aloud in the numbered count after a second miss. It did not go well: the computer voice is not worth
+  what it adds. The code is still in `index.html` behind one line, `const VOICE = false;`. With it off the
+  app behaves exactly as before, and there is no setting for it on the screen, on purpose. The words stay
+  the parent's job (see the next section), or come from the parent's own recordings.
 
 ## The parent is part of the design
 
-The words of addition ("and", "altogether", "makes") are part of the idea. The app now says the bare
-sentence in the read-back, but it cannot tell a story or ask a question. So the README carries a small
-parent card, for the first sessions at least:
+The words of addition ("and", "altogether", "makes") are part of the idea, and the app cannot say them.
+So the README carries a small parent card, for the first sessions at least:
 
-- During the read-back, say it along with the app: "3 and 2 make 5."
+- During the read-back, say it: "3 and 2 make 5."
 - Ask "how did you know?" Any answer is good. Explaining is where the learning settles.
 - Ask "what if one more came?"
 - Away from the iPad, tell tiny stories of both kinds. Some more come: "you have 3 cars, I give you 2
@@ -340,11 +328,6 @@ The rows of 5 only start to work for him when there is no time to count. Quick l
   filter (to be tested on the iPad).
 - Pointer events, tap targets of at least 60px, no text selection or zoom on taps.
 - `localStorage` for his place in the sums and the position of the parent dial. Nothing else is stored.
-- The voice is the Web Speech API (`speechSynthesis`). On iOS it may only start from a touch, so a
-  silent utterance on the first touches unlocks it. It is set up exactly as in the clock app: US English
-  (`lang = 'en-US'`), rate 0.85, and nothing else. A first version picked a voice by hand, raised the
-  pitch and spoke the sentence as three separate pieces, and it sounded odd. The beats of the read-back
-  follow the voice's word events (`boundary`), with plain timers where a browser does not send them.
 - Its own folder and its own git repo. The copied `clock/` folder still carries the clock's `.git`, which
   pushes to the `learn-clock` GitHub repo, so the new app must not be built inside that copy.
 
@@ -377,8 +360,7 @@ The rows of 5 only start to work for him when there is no time to count. Quick l
   dim until the notes start again.
 - With the lid: does he count the places under it, or read the answer off the rows?
 - With the baskets: on a small-first sum (2 + 7), does he start from the bigger number?
-- Does he look at the number sentence during the read-back? Does he start to say it along with the voice?
-- Does the device's voice grate on him or on you? It comes out cleanly: `say()` in the script.
+- Does he look at the number sentence during the read-back?
 - How long does Play hold him, and what does he do there?
 - Does "How many?" start to feel like a chore? Only then give the total a reason: a hungry animal that
   eats the apples after the read-back.

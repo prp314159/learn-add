@@ -344,13 +344,16 @@ const words = [];
 })(['m4a', 'mp3', 'wav']);
 function sayWord(n) { const w = words[n]; if (!w) return false; try { w.currentTime = 0; w.play().catch(() => {}); } catch (e) {} return true; }
 
-/* ---------- voice: the device's own voice, no files ----------
-   It speaks in two places only, where the words are the thing being taught: the read-back after a right
-   answer ("three, and two, make five") and the numbered count after a second miss. Never on his own hops,
-   and nothing in the app needs the voice to be understood. */
+/* ---------- voice: the device's own voice, no files. SWITCHED OFF ----------
+   It was tried and did not go well, so the app plays notes only, as it did before the voice was added.
+   The code stays. With VOICE = true it speaks in two places only, where the words are the thing being
+   taught: the read-back after a right answer ("three, and two, make five") and the numbered count after a
+   second miss. Never on his own hops, and nothing in the app needs the voice to be understood.
+   There is no setting for it on the screen, on purpose. */
+const VOICE = false;
 const SAYING = { and: 'and', make: 'make' };   // the other choice: 'plus' and 'equals'
 const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
-const synth = window.speechSynthesis || null;
+const synth = VOICE ? (window.speechSynthesis || null) : null;
 let voiceHeard = false, voiceFails = 0, utter = null;
 // iOS can lose its voice for good if the app goes to the background in the middle of a word
 if (synth) document.addEventListener('visibilitychange', () => { if (document.hidden) synth.cancel(); });
@@ -712,7 +715,7 @@ async function recount(g, withNumbers) {
     await Promise.all([sleep(step), said]);   // the count never runs ahead of the voice
   }
   // The last number is said once more with the big numeral: it is how many there are, not the name of the last one.
-  if (withNumbers && g === gen) { sayNumber(row.length); await showBig(row.length); }
+  if (withNumbers && g === gen) { if (VOICE) sayNumber(row.length); await showBig(row.length); }
 }
 
 // The one place where the symbols get tied to the things, so it happens every time.
