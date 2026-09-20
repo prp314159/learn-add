@@ -291,7 +291,7 @@ function sumSolved(neededNumbers) {
   if (seq.sub >= PASS[L][store.pos[L]].length) { seq.sub = 0; store.pos[L]++; save(); }
 }
 
-/* ---------- sound: small synthesised notes, no voice ---------- */
+/* ---------- sound: small synthesised notes, and a few spoken words (see "voice" below) ---------- */
 let AC = null, master = null;
 function audio() {
   if (!AC) {
@@ -326,7 +326,8 @@ const sfx = {
   fanfare() { [392, 523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(f, { t: i * .12, dur: i === 4 ? 1 : .3, vol: .4 })); },
   tumble()  { [10, 8, 6, 4, 2].forEach((n, i) => tone(freq(n), { t: i * .07, dur: .25, vol: .3 })); },
   tok()     { tone(140, { dur: .12, type: 'sine', vol: .4 }); },
-  read(i)   { tone([523.25, 659.25, 783.99][i], { dur: .6, vol: .35 }); if (i === 2) tone(1046.5, { t: .05, dur: .8, vol: .25 }); },
+  // quiet = the voice is speaking over it
+  read(i, quiet) { const k = quiet ? .4 : 1; tone([523.25, 659.25, 783.99][i], { dur: .6, vol: .35 * k }); if (i === 2) tone(1046.5, { t: .05, dur: .8, vol: .25 * k }); },
 };
 
 // Optional number words in a parent's voice: sounds/1.m4a to sounds/10.m4a (or .mp3, .wav).
@@ -341,7 +342,56 @@ const words = [];
   probe.addEventListener('error', () => findWords(exts.slice(1)), { once: true });
   probe.src = `sounds/1.${exts[0]}`;
 })(['m4a', 'mp3', 'wav']);
-function sayWord(n) { const w = words[n]; if (!w) return; try { w.currentTime = 0; w.play().catch(() => {}); } catch (e) {} }
+function sayWord(n) { const w = words[n]; if (!w) return false; try { w.currentTime = 0; w.play().catch(() => {}); } catch (e) {} return true; }
+
+/* ---------- voice: the device's own voice, no files ----------
+   It speaks in two places only, where the words are the thing being taught: the read-back after a right
+   answer ("three, and two, make five") and the numbered count after a second miss. Never on his own hops,
+   and nothing in the app needs the voice to be understood. */
+const SAYING = { and: 'and', make: 'make' };   // the other choice: 'plus' and 'equals'
+const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+const synth = window.speechSynthesis || null;
+let voice = null, voiceHeard = false, voiceFails = 0, utter = null;
+const userLang = (navigator.language || '').replace('_', '-');
+function pickVoice() {
+  const en = synth.getVoices().filter(v => /^en/i.test(v.lang));
+  const good = en.filter(v => /^(samantha|karen|daniel|moira|tessa|rishi|google us english|google uk english female|microsoft (aria|jenny|zira))/i.test(v.name));
+  // No other fallback: some devices list joke voices (bells, whispers) as English, and the first one must never win.
+  voice = en.find(v => v.default) || good.find(v => v.lang.replace('_', '-') === userLang) || good[0] || null;
+}
+if (synth) {
+  pickVoice();
+  if (synth.addEventListener) synth.addEventListener('voiceschanged', pickVoice);
+  // iOS can lose its voice for good if the app goes to the background in the middle of a word
+  document.addEventListener('visibilitychange', () => { if (document.hidden) synth.cancel(); });
+}
+const voiceOn = () => !!synth && voiceFails < 2;
+// iOS only lets a voice start from a touch. A silent word on the first touches opens the door for later.
+function wakeVoice() {
+  if (!synth || voiceHeard || synth.speaking || synth.pending) return;
+  try { synth.speak(new SpeechSynthesisUtterance('')); } catch (e) {}
+}
+// Settles when the words have been said. A voice that does not start never holds the game up.
+function say(text, rate = .85) {
+  return new Promise(done => {
+    if (!synth) return done();
+    let u;
+    try { u = utter = new SpeechSynthesisUtterance(text); } catch (e) { return done(); }   // kept in a variable, or some browsers drop it half way
+    if (voice) { u.voice = voice; u.lang = voice.lang; } else u.lang = /^en/i.test(userLang) ? userLang : 'en-US';
+    u.rate = rate; u.pitch = 1.05;
+    let started = false, settled = false, t1 = 0, t2 = 0;
+    const end = () => { if (settled) return; settled = true; clearTimeout(t1); clearTimeout(t2); done(); };
+    u.onstart = () => { started = true; voiceHeard = true; voiceFails = 0; };
+    u.onend = u.onerror = end;
+    const waiting = voiceOn();
+    try { synth.speak(u); } catch (e) { return end(); }
+    if (!waiting) return end();   // it failed twice in a row: still try, but the game keeps its own pace
+    t1 = setTimeout(() => { if (!started) { voiceFails++; synth.cancel(); end(); } }, 800);   // the cancel also clears anything stuck in front of it
+    t2 = setTimeout(end, 2500);
+  });
+}
+// A number word: the parent's recording if there is one, the device's voice if not.
+function sayNumber(n) { return sayWord(n) ? sleep(0) : say(WORDS[n], 1); }
 
 /* ---------- layout ---------- */
 const layer = $('#layer'), tray = $('#tray'), numrow = $('#numrow');
@@ -454,7 +504,7 @@ function confetti(n) {
 
 /* ---------- one queue: fast taps wait their turn, so things hop one at a time, in rhythm ---------- */
 let gen = 0, Q = { chain: Promise.resolve(), pending: 0 };
-function newGen() { gen++; Q = { chain: Promise.resolve(), pending: 0 }; }
+function newGen() { gen++; Q = { chain: Promise.resolve(), pending: 0 }; if (synth) synth.cancel(); }
 function enqueue(fn) {
   const q = Q, g = gen; q.pending++;
   q.chain = q.chain.then(async () => { if (g === gen) await fn(); })
@@ -653,18 +703,29 @@ async function recount(g, withNumbers) {
   for (let i = 0; i < row.length; i++) {
     if (g !== gen) return;
     bounce(row[i], step * .7); sfx.note(i + 1);
-    if (withNumbers) { showNum(row[i], i + 1, Math.max(650, step * .95)); sayWord(i + 1); }
-    await sleep(step);
+    let said = null;
+    if (withNumbers) { showNum(row[i], i + 1, Math.max(650, step * .95)); said = sayNumber(i + 1); }
+    await Promise.all([sleep(step), said]);   // the count never runs ahead of the voice
   }
-  if (withNumbers && g === gen) await showBig(row.length);
+  // The last number is said once more with the big numeral: it is how many there are, not the name of the last one.
+  if (withNumbers && g === gen) { sayNumber(row.length); await showBig(row.length); }
 }
 
 // The one place where the symbols get tied to the things, so it happens every time.
+// It is also where the words come in: each beat is said as its numeral and its group pulse.
 async function readBack(g) {
-  const g1 = ask.apples.filter(a => a.group === 1), g2 = ask.apples.filter(a => a.group === 2);
-  pulse(chips.n1); g1.forEach(a => pulse(a.face, 1.25)); sfx.read(0); await sleep(600); if (g !== gen) return;
-  pulse(chips.n2); g2.forEach(a => pulse(a.face, 1.25)); sfx.read(1); await sleep(600); if (g !== gen) return;
-  pulse(chips.total, 1.5, 700); ask.apples.forEach(a => pulse(a.face, 1.25, 700)); sfx.read(2); await sleep(750);
+  const s = ask.sum, talk = voiceOn(), slow = talk ? 250 : 0;   // a spoken beat needs a little longer
+  const beats = [
+    { chip: chips.n1,    group: ask.apples.filter(a => a.group === 1), k: 1.35, ms: 600, text: WORDS[s.a] },
+    { chip: chips.n2,    group: ask.apples.filter(a => a.group === 2), k: 1.35, ms: 600, text: `${SAYING.and} ${WORDS[s.b]}` },
+    { chip: chips.total, group: ask.apples,                            k: 1.5,  ms: 700, text: `${SAYING.make} ${WORDS[ask.total]}` },
+  ];
+  for (let i = 0; i < beats.length; i++) {
+    const b = beats[i], ms = b.ms + slow;
+    pulse(b.chip, b.k, ms); b.group.forEach(a => pulse(a.face, 1.25, ms)); sfx.read(i, talk);
+    await Promise.all([sleep(i === 2 ? ms + 50 : ms), say(b.text)]);   // the next beat waits for the words to end
+    if (g !== gen) return;
+  }
 }
 
 // A solved sum always earns its star, even after a miss.
@@ -764,8 +825,8 @@ function showHand() {
   if (handAnim) handAnim.onfinish = () => { hand.style.opacity = 0; lastTouch = performance.now() - 1500; };
 }
 addEventListener('pointerdown', () => { audio(); lastTouch = performance.now(); hideHand(); }, true);
-// iOS only lets sound start from the end of a touch, so the audio is woken up there as well
-['pointerup', 'touchend', 'click'].forEach(ev => addEventListener(ev, audio, true));
+// iOS only lets sound start from the end of a touch, so the audio and the voice are woken up there
+['pointerup', 'touchend', 'click'].forEach(ev => addEventListener(ev, () => { audio(); wakeVoice(); }, true));
 setInterval(() => {
   if (handAnim && handAnim.playState === 'running') return;
   if ($('#trophy').classList.contains('on')) return;
