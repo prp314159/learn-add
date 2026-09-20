@@ -351,47 +351,51 @@ function sayWord(n) { const w = words[n]; if (!w) return false; try { w.currentT
 const SAYING = { and: 'and', make: 'make' };   // the other choice: 'plus' and 'equals'
 const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
 const synth = window.speechSynthesis || null;
-let voice = null, voiceHeard = false, voiceFails = 0, utter = null;
-const userLang = (navigator.language || '').replace('_', '-');
-function pickVoice() {
-  const en = synth.getVoices().filter(v => /^en/i.test(v.lang));
-  const good = en.filter(v => /^(samantha|karen|daniel|moira|tessa|rishi|google us english|google uk english female|microsoft (aria|jenny|zira))/i.test(v.name));
-  // No other fallback: some devices list joke voices (bells, whispers) as English, and the first one must never win.
-  voice = en.find(v => v.default) || good.find(v => v.lang.replace('_', '-') === userLang) || good[0] || null;
-}
-if (synth) {
-  pickVoice();
-  if (synth.addEventListener) synth.addEventListener('voiceschanged', pickVoice);
-  // iOS can lose its voice for good if the app goes to the background in the middle of a word
-  document.addEventListener('visibilitychange', () => { if (document.hidden) synth.cancel(); });
-}
+let voiceHeard = false, voiceFails = 0, utter = null;
+// iOS can lose its voice for good if the app goes to the background in the middle of a word
+if (synth) document.addEventListener('visibilitychange', () => { if (document.hidden) synth.cancel(); });
 const voiceOn = () => !!synth && voiceFails < 2;
 // iOS only lets a voice start from a touch. A silent word on the first touches opens the door for later.
 function wakeVoice() {
   if (!synth || voiceHeard || synth.speaking || synth.pending) return;
   try { synth.speak(new SpeechSynthesisUtterance('')); } catch (e) {}
 }
-// Settles when the words have been said. A voice that does not start never holds the game up.
-function say(text, rate = .85) {
-  return new Promise(done => {
-    if (!synth) return done();
-    let u;
-    try { u = utter = new SpeechSynthesisUtterance(text); } catch (e) { return done(); }   // kept in a variable, or some browsers drop it half way
-    if (voice) { u.voice = voice; u.lang = voice.lang; } else u.lang = /^en/i.test(userLang) ? userLang : 'en-US';
-    u.rate = rate; u.pitch = 1.05;
-    let started = false, settled = false, t1 = 0, t2 = 0;
-    const end = () => { if (settled) return; settled = true; clearTimeout(t1); clearTimeout(t2); done(); };
-    u.onstart = () => { started = true; voiceHeard = true; voiceFails = 0; };
-    u.onend = u.onerror = end;
-    const waiting = voiceOn();
-    try { synth.speak(u); } catch (e) { return end(); }
-    if (!waiting) return end();   // it failed twice in a row: still try, but the game keeps its own pace
-    t1 = setTimeout(() => { if (!started) { voiceFails++; synth.cancel(); end(); } }, 800);   // the cancel also clears anything stuck in front of it
-    t2 = setTimeout(end, 2500);
-  });
+// Says the parts in one breath ("three, and two, make five"), so the sentence keeps its natural tune.
+// reach[i] settles as the voice gets to part i, done when it has finished. A voice that does not start
+// settles everything at once, so it never holds the game up.
+// The voice is set up exactly as in the clock app: US English, a little slow, nothing else. Picking a voice
+// by hand, or changing the pitch, sounded odd.
+function say(parts) {
+  const open = [], reach = parts.map((p, i) => new Promise(r => { open[i] = r; }));
+  let finish; const done = new Promise(r => { finish = r; });
+  const timers = [], later = (fn, ms) => timers.push(setTimeout(fn, ms));
+  const all = () => { timers.forEach(clearTimeout); open.forEach(f => f()); finish(); };
+  const out = { reach, done };
+  if (!synth) { all(); return out; }
+  const at = []; let pos = 0;
+  parts.forEach(p => { at.push(pos); pos += p.length + 2; });
+  let u;
+  try { u = utter = new SpeechSynthesisUtterance(parts.join(', ')); } catch (e) { all(); return out; }   // kept in a variable, or some browsers drop it half way
+  u.lang = 'en-US'; u.rate = .85;
+  let started = false, bounds = false;
+  const start = () => {
+    if (started) return;
+    started = true; voiceHeard = true; voiceFails = 0; open[0]();
+    // Without word events from the voice, a part is taken to last about 0.9 seconds.
+    parts.forEach((p, i) => { if (i) { later(() => { if (!bounds) open[i](); }, i * 900); later(open[i], i * 1600); } });
+  };
+  u.onstart = start;
+  u.onboundary = e => { start(); bounds = true; at.forEach((c, i) => { if (e.charIndex >= c) open[i](); }); };
+  u.onend = u.onerror = all;
+  const waiting = voiceOn();
+  try { synth.speak(u); } catch (e) { all(); return out; }
+  if (!waiting) { all(); return out; }   // it failed twice in a row: still try, but the game keeps its own pace
+  later(() => { if (!started) { voiceFails++; synth.cancel(); all(); } }, 800);   // the cancel also clears anything stuck in front of it
+  later(all, 1500 + parts.length * 1300);
+  return out;
 }
 // A number word: the parent's recording if there is one, the device's voice if not.
-function sayNumber(n) { return sayWord(n) ? sleep(0) : say(WORDS[n], 1); }
+function sayNumber(n) { return sayWord(n) ? sleep(0) : say([WORDS[n]]).done; }
 
 /* ---------- layout ---------- */
 const layer = $('#layer'), tray = $('#tray'), numrow = $('#numrow');
@@ -712,20 +716,24 @@ async function recount(g, withNumbers) {
 }
 
 // The one place where the symbols get tied to the things, so it happens every time.
-// It is also where the words come in: each beat is said as its numeral and its group pulse.
+// It is also where the words come in. The sentence is said in one breath, and each beat starts as the
+// voice gets to its part, so every word lands with its numeral and its group.
 async function readBack(g) {
-  const s = ask.sum, talk = voiceOn(), slow = talk ? 250 : 0;   // a spoken beat needs a little longer
+  const s = ask.sum, talk = voiceOn(), slow = talk ? 100 : 0;
   const beats = [
     { chip: chips.n1,    group: ask.apples.filter(a => a.group === 1), k: 1.35, ms: 600, text: WORDS[s.a] },
     { chip: chips.n2,    group: ask.apples.filter(a => a.group === 2), k: 1.35, ms: 600, text: `${SAYING.and} ${WORDS[s.b]}` },
     { chip: chips.total, group: ask.apples,                            k: 1.5,  ms: 700, text: `${SAYING.make} ${WORDS[ask.total]}` },
   ];
+  const voice = say(beats.map(b => b.text));
   for (let i = 0; i < beats.length; i++) {
     const b = beats[i], ms = b.ms + slow;
-    pulse(b.chip, b.k, ms); b.group.forEach(a => pulse(a.face, 1.25, ms)); sfx.read(i, talk);
-    await Promise.all([sleep(i === 2 ? ms + 50 : ms), say(b.text)]);   // the next beat waits for the words to end
+    if (i) await voice.reach[i];   // the first beat does not wait: a voice that fails to start must not leave a hole
     if (g !== gen) return;
+    pulse(b.chip, b.k, ms); b.group.forEach(a => pulse(a.face, 1.25, ms)); sfx.read(i, talk);
+    await sleep(i === 2 ? ms + 50 : ms); if (g !== gen) return;
   }
+  await voice.done;
 }
 
 // A solved sum always earns its star, even after a miss.

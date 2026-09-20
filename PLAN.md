@@ -147,10 +147,11 @@ So numbers on the apples are the last step of the help, never the default:
   not decoration. The first version had no voice at all, because a computer voice reading out
   instructions is dull. But the read-back was a silent pause shaped exactly like a sentence, and when he
   plays alone nobody fills it.
-  - *The read-back after a right answer:* "three", "and two", "make five", one chunk per beat, so each
-    word lands with its numeral and its group. The next beat waits until the words have ended. The
-    wording is "and / make" because it says what the objects do. "Plus / equals" are the names of the
-    signs and can come later: it is one line in the script (`SAYING`).
+  - *The read-back after a right answer:* "three, and two, make five", said in one breath so the
+    sentence keeps its natural tune. The pulses follow the voice: each beat starts as the voice gets to
+    its part, so each word lands with its numeral and its group. The wording is "and / make" because it
+    says what the objects do. "Plus / equals" are the names of the signs and can come later: it is one
+    line in the script (`SAYING`).
   - *The numbered count after a second miss:* "one, two, three", and the last number once more with the
     big numeral, because it means all of them.
   - Never on his own hops in "How many?", because a spoken count does the thinking for him just as a
@@ -340,8 +341,10 @@ The rows of 5 only start to work for him when there is no time to count. Quick l
 - Pointer events, tap targets of at least 60px, no text selection or zoom on taps.
 - `localStorage` for his place in the sums and the position of the parent dial. Nothing else is stored.
 - The voice is the Web Speech API (`speechSynthesis`). On iOS it may only start from a touch, so a
-  silent utterance on the first touches unlocks it. The voice is the device's default English voice, and
-  never just the first English voice in the list, because some devices list joke voices there.
+  silent utterance on the first touches unlocks it. It is set up exactly as in the clock app: US English
+  (`lang = 'en-US'`), rate 0.85, and nothing else. A first version picked a voice by hand, raised the
+  pitch and spoke the sentence as three separate pieces, and it sounded odd. The beats of the read-back
+  follow the voice's word events (`boundary`), with plain timers where a browser does not send them.
 - Its own folder and its own git repo. The copied `clock/` folder still carries the clock's `.git`, which
   pushes to the `learn-clock` GitHub repo, so the new app must not be built inside that copy.
 
