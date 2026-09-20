@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Learn to Add</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Learn to Add">
+<meta name="theme-color" content="#fff6e5">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+  :root {
+    --u: 80px;               /* one layout unit, set from the screen size in fit() */
+    --a: calc(var(--u) * 1.05); /* size of one object on the tray */
+    --bg: #fff6e5;
+    --ink: #4a3a2a;
+    --wood: #c8935a;
+    --cell: #f6e2bf;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--ink);
+    touch-action: manipulation; overscroll-behavior: none;
+    user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    font-family: ui-rounded, "SF Pro Rounded", "Arial Rounded MT Bold", "Nunito", system-ui, sans-serif;
+  }
+  body { position: fixed; inset: 0; }
+  button { font: inherit; color: inherit; border: 0; padding: 0; margin: 0; background: none; touch-action: manipulation; }
+
+  #app {
+    position: absolute; inset: 0;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  #fit { position: relative; width: 100%; height: 100%; }
+
+  /* ---------- board ---------- */
+  #board {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    display: grid; grid-template-columns: auto auto; grid-template-areas: "modes meta" "scene scene";
+  }
+  #modes { grid-area: modes; justify-self: start; display: flex; align-items: center; gap: calc(var(--u) * .2); height: calc(var(--u) * 1.1); }
+  #meta  { grid-area: meta; justify-self: end; display: flex; align-items: center; gap: calc(var(--u) * .3); height: calc(var(--u) * 1.1); }
+  #scene { grid-area: scene; width: calc(var(--u) * 12); }
+
+  /* a wide, low screen (a phone on its side): the bar moves to the two sides */
+  body.wide #board { grid-template-columns: auto auto auto; grid-template-areas: "modes scene meta"; column-gap: calc(var(--u) * .25); }
+  body.wide #modes, body.wide #meta { flex-direction: column; height: auto; align-self: start; justify-self: center; padding-top: calc(var(--u) * .2); }
+  body.wide #stars { flex-direction: column; }
+
+  .mode {
+    width: var(--u); height: var(--u); border-radius: 28%; font-size: calc(var(--u) * .56); line-height: 1;
+    background: #ffffff88; box-shadow: 0 calc(var(--u) * .05) 0 #0001; opacity: .6;
+    transition: transform .15s, opacity .15s, background .15s;
+  }
+  .mode.on { background: #fff; opacity: 1; transform: scale(1.06); box-shadow: 0 0 0 calc(var(--u) * .06) #ffb74d, 0 calc(var(--u) * .06) 0 #0002; }
+
+  #stars { display: flex; gap: calc(var(--u) * .06); font-size: calc(var(--u) * .5); line-height: 1; }
+  #stars span { filter: grayscale(1); opacity: .25; transition: filter .2s, opacity .2s; }
+  #stars span.got { filter: none; opacity: 1; }
+
+  /* the parent dial: press and hold */
+  #dial {
+    position: relative; width: calc(var(--u) * .62); height: calc(var(--u) * .62); border-radius: 50%;
+    font-size: calc(var(--u) * .3); font-weight: 800; color: #a08c74; background: #0000000d; overflow: hidden;
+  }
+  #dial::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: #ffb74d; transform: scale(0); }
+  #dial.holding::before { transform: scale(1); transition: transform .9s linear; }
+  #dial span { position: relative; }
+
+  /* ---------- the sentence and the two groups ---------- */
+  #top { display: flex; flex-direction: column; }
+  #sentence, #zones {
+    display: grid; justify-items: center; align-items: center;
+    grid-template-columns: calc(var(--u) * 4.25) calc(var(--u) * .9) calc(var(--u) * 4.25) calc(var(--u) * .9) calc(var(--u) * 1.7);
+  }
+  #sentence { height: calc(var(--u) * 1.1); }
+  #zones { height: calc(var(--u) * 1.8); }
+  /* Play: the numbers describe the tray, not the boxes, so the sentence sits right above the tray */
+  body.play #zones { order: 1; }
+  body.play #sentence { order: 2; display: flex; justify-content: center; gap: calc(var(--u) * .3); }
+  .chip {
+    min-width: calc(var(--u) * .95); height: calc(var(--u) * .95); padding: 0 calc(var(--u) * .2); border-radius: calc(var(--u) * .5);
+    display: flex; align-items: center; justify-content: center;
+    font-size: calc(var(--u) * .68); font-weight: 800; line-height: 1;
+    background: #fff; color: var(--ink); box-shadow: 0 calc(var(--u) * .04) 0 #0002;
+  }
+  .chip.ask { background: transparent; box-shadow: none; border: calc(var(--u) * .05) dashed #b9a58b; color: #b9a58b; }
+  .sign { font-size: calc(var(--u) * .7); font-weight: 800; color: #8a7760; line-height: 1; }
+  .hide { visibility: hidden; }
+  .zone { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+
+  /* A supply is a closed box with one object peeking out. It must never look like a group he could count. */
+  .pile { position: relative; width: calc(var(--u) * 2.1); height: calc(var(--u) * 1.7); }
+  .pile .peek { position: absolute; left: 0; right: 0; top: calc(var(--u) * -.1); text-align: center; font-size: calc(var(--u) * .95); line-height: 1; }
+  .pile .box {
+    position: absolute; left: 0; right: 0; bottom: calc(var(--u) * .08); height: calc(var(--u) * 1);
+    border-radius: calc(var(--u) * .12) calc(var(--u) * .12) calc(var(--u) * .26) calc(var(--u) * .26);
+    background: var(--c); box-shadow: 0 calc(var(--u) * .08) 0 #0003, inset 0 calc(var(--u) * -.12) 0 #00000022;
+  }
+  .pile .box::before {
+    content: ""; position: absolute; left: calc(var(--u) * -.08); right: calc(var(--u) * -.08); top: 0; height: calc(var(--u) * .24);
+    border-radius: calc(var(--u) * .1); background: var(--c); box-shadow: 0 calc(var(--u) * .04) 0 #00000033, inset 0 0 0 100px #ffffff2e;
+  }
+
+  /* ---------- the tray ---------- */
+  #trayWrap { position: relative; height: calc(var(--u) * 2.85); display: flex; align-items: center; justify-content: center; }
+  #tray {
+    display: grid; grid-template-columns: repeat(5, calc(var(--u) * 1.25)); grid-auto-rows: calc(var(--u) * 1.25);
+    padding: calc(var(--u) * .15); border-radius: calc(var(--u) * .3); background: var(--wood);
+    box-shadow: 0 calc(var(--u) * .08) 0 #8f6236, 0 calc(var(--u) * .2) calc(var(--u) * .3) #0002;
+  }
+  .cell { margin: calc(var(--u) * .06); border-radius: calc(var(--u) * .2); background: var(--cell); box-shadow: inset 0 calc(var(--u) * .05) 0 #0000001a; }
+  .cell.glow { animation: glow .9s ease-out; }
+  @keyframes glow { 0% { background: #fff; box-shadow: 0 0 calc(var(--u) * .5) #ffd54f; } 100% { background: var(--cell); } }
+  #tumble {
+    position: absolute; right: calc(var(--u) * .5); top: 50%; transform: translateY(-50%);
+    width: calc(var(--u) * 1.1); height: calc(var(--u) * 1.1); border-radius: 50%; font-size: calc(var(--u) * .6); line-height: 1;
+    background: #fff; box-shadow: 0 calc(var(--u) * .06) 0 #0002;
+  }
+  #tumble:active { transform: translateY(-46%); }
+
+  /* ---------- the number row ---------- */
+  #numrow { height: calc(var(--u) * 1.45); display: flex; align-items: center; justify-content: center; gap: calc(var(--u) * .12); transition: opacity .2s; }
+  #numrow button {
+    width: var(--u); height: var(--u); border-radius: 24%; background: #fff;
+    font-size: calc(var(--u) * .56); font-weight: 800; line-height: 1;
+    box-shadow: 0 calc(var(--u) * .07) 0 #d9c7ab;
+  }
+  /* Level A: bigger and wider apart than the tray places, so the last object never points at its button */
+  #numrow.a { gap: calc(var(--u) * .5); }
+  #numrow.a button { width: calc(var(--u) * 1.3); height: calc(var(--u) * 1.3); font-size: calc(var(--u) * .7); }
+  #numrow.inert { pointer-events: none; opacity: .45; }
+  #numrow button.good { background: #c8f1c1; box-shadow: 0 calc(var(--u) * .07) 0 #8fcf85; }
+  #numrow button.soft { animation: shake .35s; }
+  @keyframes shake { 25% { transform: translateX(-6%); } 50% { transform: translateX(6%); } 75% { transform: translateX(-4%); } }
+
+  /* ---------- the objects ---------- */
+  #layer { position: absolute; inset: 0; pointer-events: none; }
+  .apple {
+    position: absolute; left: 0; top: 0; width: var(--a); height: var(--a);
+    margin: calc(var(--a) / -2) 0 0 calc(var(--a) / -2);
+    pointer-events: auto; will-change: transform;
+  }
+  .apple .face { display: block; width: 100%; height: 100%; text-align: center; font-size: calc(var(--a) * .8); line-height: var(--a); }
+  .apple .num {
+    position: absolute; left: 50%; top: 50%; width: 66%; height: 66%; margin: -33% 0 0 -33%; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none;
+    background: #fffffff0; font-size: calc(var(--a) * .46); font-weight: 800; box-shadow: 0 2px 6px #0003;
+  }
+  #big {
+    position: absolute; left: 0; top: 0; width: calc(var(--u) * 2.6); height: calc(var(--u) * 2.6); margin: calc(var(--u) * -1.3) 0 0 calc(var(--u) * -1.3);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none;
+    background: #fffffff2; font-size: calc(var(--u) * 1.9); font-weight: 800; box-shadow: 0 4px 24px #0003;
+  }
+  #hand { position: absolute; left: 0; top: 0; font-size: var(--u); line-height: 1; opacity: 0; pointer-events: none; transition: opacity .3s; }
+  .bit { position: absolute; left: 0; top: 0; pointer-events: none; line-height: 1; }
+
+  /* ---------- overlays ---------- */
+  #trophy { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--u) * .3); background: #fff6e5ee; overflow: hidden; }
+  #trophy.on { display: flex; }
+  #trophy .cup { font-size: calc(var(--u) * 3.2); line-height: 1; animation: cup 1s ease-in-out infinite alternate; }
+  #trophy .go { width: calc(var(--u) * 1.4); height: calc(var(--u) * 1.4); border-radius: 50%; background: #fff; font-size: calc(var(--u) * .7); box-shadow: 0 calc(var(--u) * .08) 0 #0002; }
+  @keyframes cup { from { transform: rotate(-6deg) scale(1); } to { transform: rotate(6deg) scale(1.08); } }
+
+  #turn { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; background: var(--bg); font-size: 120px; z-index: 10; }
+  #turn span { animation: turn 2s ease-in-out infinite; }
+  @keyframes turn { 0%, 20% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
+  @media (orientation: portrait) and (max-width: 600px) { #turn { display: flex; } }
+</style>
+</head>
+<body>
+<div id="app"><div id="fit">
+  <div id="board">
+    <div id="modes">
+      <button class="mode" data-mode="play" aria-label="Play">✋</button>
+      <button class="mode" data-mode="ask" aria-label="How many?">👀</button>
+    </div>
+    <div id="meta">
+      <div id="stars" aria-hidden="true"><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span></div>
+      <button id="dial" aria-label="Level, press and hold to change"><span>A</span></button>
+    </div>
+    <div id="scene">
+      <div id="top">
+        <div id="sentence"><div class="chip" id="n1"></div><div class="sign" id="plus">+</div><div class="chip" id="n2"></div><div class="sign" id="eq">=</div><div class="chip" id="total"></div></div>
+        <div id="zones"><div class="zone" id="zone1"></div><div></div><div class="zone" id="zone2"></div><div></div><div></div></div>
+      </div>
+      <div id="trayWrap">
+        <div id="tray"></div>
+        <button id="tumble" aria-label="Tip everything off the tray">🌪️</button>
+      </div>
+      <div id="numrow"></div>
+    </div>
+  </div>
+  <div id="layer"><div id="big"></div><div id="hand">👆</div></div>
+  <div id="trophy"><div class="cup">🏆</div><button class="go" aria-label="Again">▶️</button></div>
+  <div id="turn"><span>📱</span></div>
+</div></div>
+
+<script>
+(() => {
+'use strict';
+
+const $ = s => document.querySelector(s);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const lerp = (a, b, t) => a + (b - a) * t;
+
+/* ---------- the objects: two colours of one kind of thing ----------
+   Put what he loves first. The object changes after every trophy, never inside one sum.
+   Red and blue or red and yellow, never red and green. */
+const SETS = [
+  { e: ['🚗', '🚙'], bg: ['#e53935', '#1e88e5'], fg: ['#fff', '#fff'] },
+  { e: ['❤️', '💛'], bg: ['#e53935', '#fbc02d'], fg: ['#fff', '#4a3500'] },
+  { e: ['📕', '📘'], bg: ['#e53935', '#1e88e5'], fg: ['#fff', '#fff'] },
+  { e: ['🔴', '🟡'], bg: ['#e53935', '#fbc02d'], fg: ['#fff', '#4a3500'] },
+];
+let setIdx = 0;
+const set = () => SETS[setIdx];
+
+/* ---------- which sums, in what order ---------- */
+const one = (a, b) => [{ a, b, c1: 0, c2: 1 }];
+// A turn-around pair, back to back. The colour stays with the quantity, so the second tray mirrors the first.
+const pair = (a, b) => [{ a, b, c1: 0, c2: 1 }, { a: b, b: a, c1: 1, c2: 0 }];
+const PASS = {
+  A: [one(1, 1), one(2, 1), one(3, 1), one(4, 1),      // plus one
+      pair(3, 1), pair(2, 1), pair(4, 1),              // turn-arounds
+      one(2, 2), pair(3, 2)],                          // plus two and the double
+  B: [one(6, 1), pair(8, 1), pair(7, 2),               // plus one and plus two, a sample only
+      pair(5, 1), pair(5, 2), pair(5, 3), pair(5, 4), one(5, 5),   // five and some more
+      one(3, 3), pair(3, 4), one(4, 4), pair(4, 5),    // doubles, each with its near double
+      pair(9, 1), pair(8, 2), pair(7, 3), pair(6, 4),  // tens pairs
+      pair(3, 6)],
+};
+function pool(level) {
+  const out = [];
+  for (let a = 1; a <= 9; a++) for (let b = 1; b <= 9; b++) {
+    const t = a + b;
+    if (level === 'A' ? t <= 5 : (t >= 6 && t <= 10)) out.push({ a, b, c1: 0, c2: 1 });
+  }
+  return out;
+}
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
+  return arr;
+}
+
+/* ---------- what is remembered: his place in the sums and the parent dial ---------- */
+const KEY = 'learn-add-v1';
+const store = (() => {
+  const s = { level: 'A', pos: { A: 0, B: 0 } };
+  try { const j = JSON.parse(localStorage.getItem(KEY)); if (j) { if (j.level === 'B') s.level = 'B'; s.pos.A = j.pos.A | 0; s.pos.B = j.pos.B | 0; } } catch (e) {}
+  return s;
+})();
+function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
+
+const seq = { sub: 0, last: null, forced: null, bag: [], comeback: [], fromPass: false };
+function resetSeq() { seq.sub = 0; seq.forced = null; seq.bag = []; seq.comeback = []; }
+
+function draw(level) {
+  if (!seq.bag.length) seq.bag = shuffle(pool(level));
+  let s = seq.bag.pop();
+  if (seq.last && s.a === seq.last.a && s.b === seq.last.b && seq.bag.length) { const t = seq.bag.pop(); seq.bag.unshift(s); s = t; }
+  if (s.a !== s.b && Math.random() < .3) seq.forced = { a: s.b, b: s.a, c1: 1, c2: 0 };   // a turn-around pair now and then
+  return s;
+}
+function nextSum() {
+  const L = store.level;
+  seq.comeback.forEach(c => c.due--);
+  let s;
+  if (seq.sub === 0 && !seq.forced && seq.comeback.length && seq.comeback[0].due <= 0) {
+    s = seq.comeback.shift().sum; seq.fromPass = false;
+  } else if (store.pos[L] < PASS[L].length) {
+    s = PASS[L][store.pos[L]][seq.sub]; seq.fromPass = true;
+  } else if (seq.forced) {
+    s = seq.forced; seq.forced = null; seq.fromPass = false;
+  } else {
+    s = draw(L); seq.fromPass = false;
+  }
+  seq.last = s;
+  return s;
+}
+function sumSolved(neededNumbers) {
+  const L = store.level;
+  if (neededNumbers) seq.comeback.push({ sum: seq.last, due: 3 });   // it comes back, so he gets to solve it by himself
+  if (!seq.fromPass) return;
+  seq.sub++;
+  // his place is saved only between pairs, so a new session never starts in the middle of a turn-around
+  if (seq.sub >= PASS[L][store.pos[L]].length) { seq.sub = 0; store.pos[L]++; save(); }
+}
+
+/* ---------- sound: small synthesised notes, no voice ---------- */
+let AC = null, master = null;
+function audio() {
+  if (!AC) {
+    const C = window.AudioContext || window.webkitAudioContext;
+    if (!C) return null;
+    AC = new C(); master = AC.createGain(); master.gain.value = .55; master.connect(AC.destination);
+  }
+  if (AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function tone(f, { t = 0, dur = .5, type = 'triangle', vol = .5, to = 0 } = {}) {
+  const c = audio(); if (!c) return;
+  const o = c.createOscillator(), g = c.createGain(), s = c.currentTime + t;
+  o.type = type; o.frequency.setValueAtTime(f, s);
+  if (to) o.frequency.exponentialRampToValueAtTime(to, s + dur);
+  g.gain.setValueAtTime(.0001, s);
+  g.gain.exponentialRampToValueAtTime(vol, s + .015);
+  g.gain.exponentialRampToValueAtTime(.0001, s + dur);
+  o.connect(g); g.connect(master); o.start(s); o.stop(s + dur + .05);
+}
+// Five notes (C D E G A), then the same again one octave up: the bottom row sounds like the top row.
+const SCALE = [261.63, 293.66, 329.63, 392.00, 440.00];
+const freq = n => SCALE[(n - 1) % 5] * Math.pow(2, Math.floor((n - 1) / 5));
+const sfx = {
+  note(n)   { tone(freq(n), { dur: .55 }); tone(freq(n) * 2, { dur: .3, vol: .1, type: 'sine' }); },
+  off(n)    { tone(freq(Math.max(1, n)) / 2, { dur: .3, vol: .4 }); },
+  chord()   { [523.25, 659.25, 783.99].forEach((f, i) => tone(f, { t: i * .07, dur: .7, vol: .35 })); },
+  boop()    { tone(220, { dur: .3, type: 'sine', vol: .4, to: 150 }); },
+  slide()   { tone(330, { dur: .25, type: 'sine', vol: .15, to: 520 }); },
+  ting()    { tone(1568, { dur: .5, type: 'sine', vol: .3 }); tone(2093, { t: .08, dur: .5, type: 'sine', vol: .2 }); },
+  sparkle() { [1047, 1319, 1568, 2093].forEach((f, i) => tone(f, { t: i * .06, dur: .35, type: 'sine', vol: .22 })); },
+  fanfare() { [392, 523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(f, { t: i * .12, dur: i === 4 ? 1 : .3, vol: .4 })); },
+  tumble()  { [10, 8, 6, 4, 2].forEach((n, i) => tone(freq(n), { t: i * .07, dur: .25, vol: .3 })); },
+  tok()     { tone(140, { dur: .12, type: 'sine', vol: .4 }); },
+  read(i)   { tone([523.25, 659.25, 783.99][i], { dur: .6, vol: .35 }); if (i === 2) tone(1046.5, { t: .05, dur: .8, vol: .25 }); },
+};
+
+// Optional number words in a parent's voice: sounds/1.m4a to sounds/10.m4a (or .mp3, .wav).
+// They play only where a number is also shown: Play landings and the numbered count. Never on his own hops in "How many?".
+const words = [];
+(function findWords(exts) {
+  if (!exts.length) return;
+  const probe = new Audio();
+  probe.addEventListener('canplaythrough', () => {
+    for (let n = 1; n <= 10; n++) { const w = new Audio(`sounds/${n}.${exts[0]}`); w.preload = 'auto'; words[n] = w; }
+  }, { once: true });
+  probe.addEventListener('error', () => findWords(exts.slice(1)), { once: true });
+  probe.src = `sounds/1.${exts[0]}`;
+})(['m4a', 'mp3', 'wav']);
+function sayWord(n) { const w = words[n]; if (!w) return; try { w.currentTime = 0; w.play().catch(() => {}); } catch (e) {} }
+
+/* ---------- layout ---------- */
+const layer = $('#layer'), tray = $('#tray'), numrow = $('#numrow');
+let U = 80, cells = [];
+const apples = [];
+
+function fit() {
+  const f = $('#fit'), W = f.clientWidth, H = f.clientHeight;
+  const wide = W / H > 1.85;
+  document.body.classList.toggle('wide', wide);
+  U = wide ? Math.min(W / 15.2, H / 7.4) : Math.min(W / 12.5, H / 8.6);
+  document.documentElement.style.setProperty('--u', U + 'px');
+  apples.forEach(a => setPos(a, where(a), 0));
+}
+function rectIn(el) {
+  const r = el.getBoundingClientRect(), L = layer.getBoundingClientRect();
+  return { x: r.left - L.left, y: r.top - L.top, w: r.width, h: r.height };
+}
+const centre = el => { const r = rectIn(el); return { x: r.x + r.w / 2, y: r.y + r.h / 2 }; };
+function trayPos(slot) { const c = centre(cells[slot]); return { x: c.x, y: c.y, s: 1 }; }
+// A group at the top has the same shape as the tray: a row of 5, then the rest.
+function homePos(zone, n, i) {
+  const c = centre(zone), p = U * .84;
+  if (n <= 5) return { x: c.x + (i - (n - 1) / 2) * p, y: c.y, s: .82 };
+  return { x: c.x + ((i % 5) - 2) * p, y: c.y + (i < 5 ? -.5 : .5) * p, s: .82 };
+}
+function where(a) {
+  if (a.at.t === 'tray') return trayPos(a.at.slot);
+  if (a.at.t === 'home' || a.at.t === 'queued') return homePos(a.zone, a.n, a.i);
+  return a.pos;
+}
+function buildTray(rows) {
+  tray.innerHTML = ''; cells = [];
+  for (let i = 0; i < rows * 5; i++) { const c = document.createElement('div'); c.className = 'cell'; tray.appendChild(c); cells.push(c); }
+}
+function buildNumrow(n) {
+  numrow.innerHTML = ''; numrow.classList.toggle('a', n === 5);
+  for (let i = 1; i <= n; i++) { const b = document.createElement('button'); b.textContent = i; b.dataset.n = i; numrow.appendChild(b); }
+}
+
+/* ---------- objects on the screen ---------- */
+const T = p => `translate(${p.x}px, ${p.y}px) scale(${p.s})`;
+function makeApple(c) {
+  const el = document.createElement('div'); el.className = 'apple';
+  const face = document.createElement('span'); face.className = 'face'; face.textContent = set().e[c];
+  const num = document.createElement('span'); num.className = 'num';
+  el.append(face, num); layer.appendChild(el);
+  const a = { el, face, num, c, at: { t: 'fly' }, pos: { x: 0, y: 0, s: 1 } };
+  el._a = a; apples.push(a);
+  return a;
+}
+function removeApple(a) { a.el.remove(); const i = apples.indexOf(a); if (i >= 0) apples.splice(i, 1); }
+function clearApples() { apples.slice().forEach(removeApple); }
+function setPos(a, p, ms) {
+  a.pos = p;
+  a.el.style.transition = ms ? `transform ${ms}ms cubic-bezier(.3, .7, .3, 1)` : 'none';
+  a.el.style.transform = T(p);
+}
+// One hop along an arc. The promise settles when the object has landed.
+function hop(a, p, ms = 360) {
+  const from = a.pos, h = U * .9, frames = [];
+  for (let k = 0; k <= 10; k++) {
+    const t = k / 10;
+    frames.push({ transform: T({ x: lerp(from.x, p.x, t), y: lerp(from.y, p.y, t) - 4 * h * t * (1 - t), s: lerp(from.s, p.s, t) }) });
+  }
+  setPos(a, p, 0);
+  if (!a.el.animate) return sleep(ms);
+  return a.el.animate(frames, { duration: ms, easing: 'ease-in-out' }).finished.catch(() => {});
+}
+const anim = (el, frames, opts) => el.animate ? el.animate(frames, opts) : null;
+const squash = a => anim(a.face, [{ transform: 'scale(1.18, .82)' }, { transform: 'scale(.94, 1.06)' }, { transform: 'scale(1)' }], { duration: 220 });
+const wiggle = el => anim(el, [{ transform: 'rotate(0)' }, { transform: 'rotate(-13deg)' }, { transform: 'rotate(11deg)' }, { transform: 'rotate(-6deg)' }, { transform: 'rotate(0)' }], { duration: 320 });
+const pulse = (el, k = 1.35, ms = 600) => anim(el, [{ transform: 'scale(1)' }, { transform: `scale(${k})` }, { transform: 'scale(1)' }], { duration: ms, easing: 'ease-in-out' });
+const bounce = (a, ms) => anim(a.face, [{ transform: 'translateY(0) scale(1)' }, { transform: `translateY(${-U * .42}px) scale(1.12)` }, { transform: 'translateY(0) scale(1)' }], { duration: ms, easing: 'ease-in-out' });
+const popIn = (a, delay) => anim(a.face, [{ transform: 'scale(0)' }, { transform: 'scale(1.15)' }, { transform: 'scale(1)' }], { duration: 300, delay, fill: 'backwards' });
+function showNum(a, n, ms) {
+  a.num.textContent = n;
+  anim(a.num, [{ opacity: 0, transform: 'scale(.4)' }, { opacity: 1, transform: 'scale(1.1)', offset: .2 }, { opacity: 1, transform: 'scale(1)', offset: .7 }, { opacity: 0, transform: 'scale(1)' }], { duration: ms });
+}
+// The last number means all of them: one big numeral over the whole tray.
+async function showBig(n) {
+  const big = $('#big'), c = centre(tray);
+  big.textContent = n; big.style.left = c.x + 'px'; big.style.top = c.y + 'px';
+  anim(big, [{ opacity: 0, transform: 'scale(.3)' }, { opacity: 1, transform: 'scale(1.1)', offset: .15 }, { opacity: 1, transform: 'scale(1)', offset: .25 }, { opacity: 1, transform: 'scale(1)', offset: .8 }, { opacity: 0, transform: 'scale(1)' }], { duration: 1600 });
+  await sleep(1600);
+}
+function glowCells(from, to) {
+  for (let i = from; i < to && i < cells.length; i++) { const c = cells[i]; c.classList.remove('glow'); void c.offsetWidth; c.classList.add('glow'); }
+}
+function bits(emoji, from, to, n = 6) {
+  for (let k = 0; k < n; k++) {
+    const b = document.createElement('div'); b.className = 'bit'; b.textContent = emoji; b.style.fontSize = U * .45 + 'px';
+    layer.appendChild(b);
+    const x = lerp(from.x, to.x, Math.random()), y = lerp(from.y, to.y, Math.random());
+    const an = anim(b, [{ transform: `translate(${x}px, ${y}px) scale(0)`, opacity: 1 }, { transform: `translate(${x}px, ${y - U * .5}px) scale(1.2)`, opacity: 1, offset: .4 }, { transform: `translate(${x}px, ${y - U}px) scale(.6)`, opacity: 0 }], { duration: 800, delay: k * 50, fill: 'backwards' });
+    if (an) an.onfinish = () => b.remove(); else b.remove();
+  }
+}
+function confetti(n) {
+  const box = $('#trophy'), W = box.clientWidth, H = box.clientHeight, cols = ['#e53935', '#fbc02d', '#1e88e5', '#43a047', '#ab47bc'];
+  for (let k = 0; k < n; k++) {
+    const b = document.createElement('div'); b.className = 'bit';
+    b.style.cssText = `width:${U * .16}px;height:${U * .28}px;border-radius:3px;background:${cols[k % cols.length]}`;
+    box.appendChild(b);
+    const x = Math.random() * W, dx = (Math.random() - .5) * U * 3;
+    const an = anim(b, [{ transform: `translate(${x}px, ${-U}px) rotate(0)` }, { transform: `translate(${x + dx}px, ${H + U}px) rotate(${720 * (Math.random() - .5)}deg)` }], { duration: 1800 + Math.random() * 1600, delay: Math.random() * 600, easing: 'ease-in', fill: 'backwards' });
+    if (an) an.onfinish = () => b.remove(); else b.remove();
+  }
+}
+
+/* ---------- one queue: fast taps wait their turn, so things hop one at a time, in rhythm ---------- */
+let gen = 0, Q = { chain: Promise.resolve(), pending: 0 };
+function newGen() { gen++; Q = { chain: Promise.resolve(), pending: 0 }; }
+function enqueue(fn) {
+  const q = Q, g = gen; q.pending++;
+  q.chain = q.chain.then(async () => { if (g === gen) await fn(); })
+    .catch(e => console.error(e))
+    .then(() => { q.pending--; if (q === Q && q.pending === 0 && mode === 'ask') askIdle(); });
+}
+
+/* ---------- the sentence ---------- */
+const chips = { n1: $('#n1'), n2: $('#n2'), total: $('#total'), plus: $('#plus'), eq: $('#eq') };
+function paintChip(el, c) { el.style.background = set().bg[c]; el.style.color = set().fg[c]; el.classList.remove('ask'); }
+function plainChip(el, askMark) { el.style.background = ''; el.style.color = ''; el.classList.toggle('ask', askMark); }
+
+/* ==================== ✋ Play: no questions ==================== */
+let mode = 'play';
+const play = { list: [], reserved: 0, piles: [] };
+const peek = c => play.piles[c].firstChild;
+
+function buildPiles() {
+  play.piles = [0, 1].map(c => {
+    const zone = $(c ? '#zone2' : '#zone1');
+    const p = document.createElement('button'); p.className = 'pile'; p.dataset.c = c;
+    p.style.setProperty('--c', set().bg[c]);
+    p.innerHTML = '<span class="peek"></span><span class="box"></span>'; p.firstChild.textContent = set().e[c];
+    zone.innerHTML = ''; zone.appendChild(p);
+    return p;
+  });
+}
+function playSentence(landed) {
+  const r = play.list.filter(a => a.c === 0).length, y = play.list.length - r, both = r > 0 && y > 0;
+  chips.n1.textContent = r; chips.n2.textContent = y; chips.total.textContent = r + y;
+  chips.n1.classList.toggle('hide', !r); chips.n2.classList.toggle('hide', !y);
+  [chips.plus, chips.eq, chips.total].forEach(el => el.classList.toggle('hide', !both));   // one colour shows just "3", never "3 + 0"
+  if (landed) pulse(both ? chips.total : (r ? chips.n1 : chips.n2), 1.3, 350);
+}
+// The tray keeps itself tidy: no holes, colours together, so the rows of 5 stay true.
+function playTidy() {
+  play.list.sort((p, q) => p.c - q.c);
+  play.list.forEach((a, i) => { if (a.at.slot !== i) { a.at = { t: 'tray', slot: i }; setPos(a, trayPos(i), 260); } });
+}
+function playAdd(c) {
+  if (play.reserved >= 10) { wiggle(play.piles[c]); sfx.tok(); return; }
+  play.reserved++;
+  anim(peek(c), [{ transform: 'translateY(0)' }, { transform: `translateY(${-U * .25}px)` }, { transform: 'translateY(0)' }], { duration: 200 });
+  enqueue(async () => {
+    const a = makeApple(c), from = centre(peek(c));
+    setPos(a, { x: from.x, y: from.y, s: .78 }, 0);
+    const slot = play.list.length;                       // it lands in the next free place, then slides to its colour
+    await hop(a, trayPos(slot), 340);
+    a.at = { t: 'tray', slot }; play.list.push(a);
+    squash(a); sfx.note(play.list.length); sayWord(play.list.length);
+    playTidy(); playSentence(true);
+    if (play.list.length === 5) { sfx.sparkle(); glowCells(0, 5); bits('✨', centre(cells[0]), centre(cells[4])); }
+    if (play.list.length === 10) { sfx.fanfare(); glowCells(0, 10); bits('✨', centre(cells[0]), centre(cells[9]), 12); }
+  });
+}
+function playRemove(a) {
+  if (a.leaving) return;
+  a.leaving = true; play.reserved--;
+  enqueue(async () => {
+    const i = play.list.indexOf(a); if (i >= 0) play.list.splice(i, 1);
+    a.at = { t: 'fly' };
+    sfx.off(play.list.length); playTidy(); playSentence(false);
+    const to = centre(peek(a.c));
+    await hop(a, { x: to.x, y: to.y, s: .5 }, 300);
+    removeApple(a);
+  });
+}
+function playTumble() {
+  enqueue(async () => {
+    const all = play.list.splice(0); if (!all.length) return;
+    play.reserved -= all.length; sfx.tumble(); playSentence(false);
+    all.forEach((a, k) => {
+      a.leaving = true; a.at = { t: 'fly' };
+      const spin = (Math.random() - .5) * 600;
+      anim(a.face, [{ transform: 'translateY(0) rotate(0)', opacity: 1 }, { transform: `translateY(${U * 4}px) rotate(${spin}deg)`, opacity: 0 }], { duration: 600, delay: k * 35, easing: 'ease-in', fill: 'both' });
+    });
+    await sleep(650 + all.length * 35);
+    all.forEach(removeApple);
+  });
+}
+
+/* ==================== 👀 How many? ==================== */
+const ask = { sum: null, apples: [], total: 0, onTray: 0, misses: 0, busy: false, tidying: false, pending: null, run: 0, runTimer: 0 };
+let stars = 0;
+
+function paintStars() { document.querySelectorAll('#stars span').forEach((s, i) => s.classList.toggle('got', i < stars)); }
+
+function deal() {
+  const s = nextSum();
+  clearApples();
+  Object.assign(ask, { sum: s, apples: [], total: s.a + s.b, onTray: 0, misses: 0, busy: false, tidying: false, pending: null, run: 0 });
+  [chips.n1, chips.n2, chips.total, chips.plus, chips.eq].forEach(el => el.classList.remove('hide'));
+  chips.n1.textContent = s.a; paintChip(chips.n1, s.c1);
+  chips.n2.textContent = s.b; paintChip(chips.n2, s.c2);
+  chips.total.textContent = '?'; plainChip(chips.total, true);
+  numrow.classList.remove('inert');
+  numrow.querySelectorAll('button').forEach(b => b.classList.remove('good', 'soft'));
+  [[1, s.a, s.c1, $('#zone1')], [2, s.b, s.c2, $('#zone2')]].forEach(([group, n, c, zone]) => {
+    for (let i = 0; i < n; i++) {
+      const a = makeApple(c); Object.assign(a, { group, zone, n, i, at: { t: 'home' } });
+      setPos(a, homePos(zone, n, i), 0); popIn(a, (group - 1) * 150 + i * 40);
+      ask.apples.push(a);
+    }
+  });
+}
+
+// One tap, one object, one count. Notes only: he counts himself.
+function askTapApple(a) {
+  if (ask.busy) return;
+  if (a.at.t === 'home') {
+    a.at = { t: 'queued' };
+    enqueue(async () => {
+      const slot = ask.onTray++;
+      a.at = { t: 'tray', slot };
+      await hop(a, trayPos(slot));
+      squash(a); sfx.note(slot + 1);
+    });
+  } else if (a.at.t === 'tray') {
+    // Touching is counting: a wiggle and the next note up, no number. After a pause the run starts again.
+    ask.run = Math.min(ask.run + 1, 15);
+    wiggle(a.face); sfx.note(ask.run);
+    clearTimeout(ask.runTimer); ask.runTimer = setTimeout(() => { ask.run = 0; }, 1800);
+  }
+}
+
+// If the colours ended up mixed, slide them into first group, then second group. If not, nothing moves.
+async function tidy() {
+  const on = ask.apples.filter(a => a.at.t === 'tray').sort((p, q) => p.at.slot - q.at.slot);
+  const want = on.filter(a => a.group === 1).concat(on.filter(a => a.group === 2));
+  let moved = false;
+  want.forEach((a, i) => { if (a.at.slot !== i) { a.at.slot = i; setPos(a, trayPos(i), 420); moved = true; } });
+  if (moved) { sfx.slide(); await sleep(470); }
+}
+// The proof moves groups, not single objects: each group slides onto the tray in one piece, first group first.
+async function bringRest(g) {
+  for (const group of [1, 2]) {
+    const rest = ask.apples.filter(a => a.group === group && a.at.t === 'home');
+    if (!rest.length) continue;
+    rest.forEach(a => { const slot = ask.onTray++; a.at = { t: 'tray', slot }; setPos(a, trayPos(slot), 460); });
+    sfx.slide(); await sleep(500);
+    if (g !== gen) return;
+  }
+}
+async function askIdle() {
+  const g = gen;
+  if (ask.onTray === ask.total && !ask.busy) { ask.tidying = true; await tidy(); if (g !== gen) return; ask.tidying = false; }
+  if (ask.pending != null && !ask.busy) { const n = ask.pending; ask.pending = null; evaluate(n); }
+}
+
+// He may answer at any moment, even before moving a single object.
+function answer(n) {
+  if (ask.busy) return;
+  if (Q.pending > 0 || ask.tidying) { ask.pending = n; return; }
+  evaluate(n);
+}
+
+async function evaluate(n) {
+  const g = gen, btn = numrow.querySelector(`button[data-n="${n}"]`);
+  ask.busy = true; ask.pending = null; numrow.classList.add('inert');
+  clearTimeout(ask.runTimer); ask.run = 0;
+
+  if (n !== ask.total) {
+    // A miss: no buzzer, no red cross. First a slow recount with notes only, from the second miss on with numbers.
+    ask.misses++;
+    sfx.boop(); btn.classList.remove('soft'); void btn.offsetWidth; btn.classList.add('soft');
+    await sleep(350); if (g !== gen) return;
+    await bringRest(g); if (g !== gen) return;
+    await tidy(); if (g !== gen) return;
+    await recount(g, ask.misses >= 2); if (g !== gen) return;
+    ask.busy = false; numrow.classList.remove('inert');
+    return;
+  }
+
+  sfx.chord(); btn.classList.add('good');
+  chips.total.textContent = ask.total; plainChip(chips.total, false); pulse(chips.total, 1.3, 350);
+  await bringRest(g); if (g !== gen) return;
+  await tidy(); if (g !== gen) return;
+  if (ask.total === 10) { sfx.fanfare(); glowCells(0, 10); bits('✨', centre(cells[0]), centre(cells[9]), 10); await sleep(700); if (g !== gen) return; }
+  await readBack(g); if (g !== gen) return;
+  await giveStar(g); if (g !== gen) return;
+  sumSolved(ask.misses >= 2);
+  if (stars >= 5) {
+    await trophy(); if (g !== gen) return;
+    stars = 0; paintStars();
+    setIdx = (setIdx + 1) % SETS.length;   // a new object as a treat, never inside one sum
+  }
+  await sleep(150); if (g !== gen) return;
+  deal();
+}
+
+// About one object per second up to 5, quicker for bigger totals, never more than about 6 seconds in all.
+async function recount(g, withNumbers) {
+  const row = ask.apples.slice().sort((p, q) => p.at.slot - q.at.slot);
+  const step = Math.min(1000, 6000 / row.length);
+  await sleep(250);
+  for (let i = 0; i < row.length; i++) {
+    if (g !== gen) return;
+    bounce(row[i], step * .7); sfx.note(i + 1);
+    if (withNumbers) { showNum(row[i], i + 1, Math.max(650, step * .95)); sayWord(i + 1); }
+    await sleep(step);
+  }
+  if (withNumbers && g === gen) await showBig(row.length);
+}
+
+// The one place where the symbols get tied to the things, so it happens every time.
+async function readBack(g) {
+  const g1 = ask.apples.filter(a => a.group === 1), g2 = ask.apples.filter(a => a.group === 2);
+  pulse(chips.n1); g1.forEach(a => pulse(a.face, 1.25)); sfx.read(0); await sleep(600); if (g !== gen) return;
+  pulse(chips.n2); g2.forEach(a => pulse(a.face, 1.25)); sfx.read(1); await sleep(600); if (g !== gen) return;
+  pulse(chips.total, 1.5, 700); ask.apples.forEach(a => pulse(a.face, 1.25, 700)); sfx.read(2); await sleep(750);
+}
+
+// A solved sum always earns its star, even after a miss.
+async function giveStar(g) {
+  const slot = document.querySelectorAll('#stars span')[stars], from = centre(chips.total), to = centre(slot);
+  const s = document.createElement('div'); s.className = 'bit'; s.textContent = '⭐'; s.style.fontSize = U * .7 + 'px';
+  s.style.margin = `${-U * .35}px 0 0 ${-U * .35}px`; layer.appendChild(s);
+  anim(s, [{ transform: `translate(${from.x}px, ${from.y}px) scale(.3)` }, { transform: `translate(${lerp(from.x, to.x, .5)}px, ${Math.min(from.y, to.y) - U * .6}px) scale(1.5)`, offset: .5 }, { transform: `translate(${to.x}px, ${to.y}px) scale(.7)` }], { duration: 500, easing: 'ease-in-out' });
+  await sleep(500); s.remove();
+  if (g !== gen) return;
+  stars++; paintStars(); sfx.ting(); pulse(slot, 1.6, 350);
+  await sleep(300);
+}
+function trophy() {
+  return new Promise(done => {
+    const box = $('#trophy'), t0 = performance.now();
+    box.classList.add('on'); sfx.fanfare(); confetti(70);
+    const tap = () => {
+      if (performance.now() - t0 < 1200) return;
+      box.removeEventListener('pointerdown', tap); box.classList.remove('on'); done();
+    };
+    box.addEventListener('pointerdown', tap);
+  });
+}
+
+/* ==================== modes, the parent dial, taps ==================== */
+function setMode(m) {
+  mode = m; newGen(); clearApples(); hideHand();
+  clearTimeout(ask.runTimer);
+  document.querySelectorAll('.mode').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
+  $('#zone1').innerHTML = ''; $('#zone2').innerHTML = '';
+  const isPlay = m === 'play';
+  document.body.classList.toggle('play', isPlay);
+  $('#stars').classList.toggle('hide', isPlay);
+  $('#tumble').classList.toggle('hide', !isPlay);
+  numrow.classList.toggle('hide', isPlay);
+  $('#dial span').textContent = store.level;
+  if (isPlay) {
+    buildTray(2); buildNumrow(10);
+    play.list = []; play.reserved = 0;
+    paintChip(chips.n1, 0); paintChip(chips.n2, 1); plainChip(chips.total, false);
+    buildPiles(); playSentence(false);
+  } else {
+    const A = store.level === 'A';
+    buildTray(A ? 1 : 2); buildNumrow(A ? 5 : 10);   // Level A: totals up to 5, top row only
+    seq.sub = 0;
+    deal();
+  }
+}
+
+document.querySelectorAll('.mode').forEach(b => b.addEventListener('pointerdown', () => { if (b.dataset.mode !== mode) { sfx.tok(); setMode(b.dataset.mode); } }));
+layer.addEventListener('pointerdown', e => {
+  const el = e.target.closest('.apple'); if (!el) return;
+  if (mode === 'play') playRemove(el._a); else askTapApple(el._a);
+});
+$('#zones').addEventListener('pointerdown', e => { const p = e.target.closest('.pile'); if (p && mode === 'play') playAdd(+p.dataset.c); });
+$('#tumble').addEventListener('pointerdown', () => { if (mode === 'play') playTumble(); });
+numrow.addEventListener('pointerdown', e => { const b = e.target.closest('button'); if (b && mode === 'ask') answer(+b.dataset.n); });
+
+// The parent dial: press and hold, so he does not flip it by accident.
+(() => {
+  const dial = $('#dial'); let timer = 0;
+  const stop = () => { clearTimeout(timer); dial.classList.remove('holding'); };
+  dial.addEventListener('pointerdown', () => {
+    dial.classList.add('holding');
+    timer = setTimeout(() => {
+      stop(); store.level = store.level === 'A' ? 'B' : 'A'; save(); resetSeq(); sfx.ting(); setMode(mode);
+    }, 900);
+  });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => dial.addEventListener(ev, stop));
+})();
+
+/* ---------- the pointing hand: a short demo when nothing happens for a while ---------- */
+const hand = $('#hand'); let lastTouch = performance.now(), handAnim = null;
+function hideHand() { hand.style.opacity = 0; if (handAnim) { handAnim.cancel(); handAnim = null; } }
+function showHand() {
+  if (mode === 'ask' && (ask.busy || Q.pending)) return;
+  let from, to, glyph = '👆';
+  if (mode === 'play') {
+    if (play.reserved > 0) return;
+    from = to = centre(play.piles[0]);
+  } else {
+    const home = ask.apples.find(a => a.at.t === 'home');
+    if (home) from = to = home.pos;
+    else {   // everything is on the tray: sweep along the whole number row, never point at one number
+      const bs = numrow.querySelectorAll('button'); glyph = '👇';
+      from = centre(bs[0]); to = centre(bs[bs.length - 1]);
+      from.y -= U * 1.1; to.y -= U * 1.1;
+    }
+  }
+  hand.textContent = glyph; hand.style.opacity = 1;
+  const dx = -U * .5, dy = glyph === '👆' ? U * .1 : 0, tap = U * .18;
+  const at = (p, k) => ({ transform: `translate(${p.x + dx}px, ${p.y + dy + k * tap}px)` });
+  handAnim = from === to
+    ? anim(hand, [at(from, 1), at(from, 0), at(from, 1), at(from, 0), at(from, 1)], { duration: 2000, easing: 'ease-in-out' })
+    : anim(hand, [at(from, 0), at(to, 0), at(from, 0)], { duration: 3200, easing: 'ease-in-out' });
+  if (handAnim) handAnim.onfinish = () => { hand.style.opacity = 0; lastTouch = performance.now() - 1500; };
+}
+addEventListener('pointerdown', () => { audio(); lastTouch = performance.now(); hideHand(); }, true);
+// iOS only lets sound start from the end of a touch, so the audio is woken up there as well
+['pointerup', 'touchend', 'click'].forEach(ev => addEventListener(ev, audio, true));
+setInterval(() => {
+  if (handAnim && handAnim.playState === 'running') return;
+  if ($('#trophy').classList.contains('on')) return;
+  if (performance.now() - lastTouch > 5000) showHand();
+}, 1000);
+
+/* ---------- no zoom, no menus ---------- */
+['gesturestart', 'contextmenu', 'dblclick'].forEach(ev => document.addEventListener(ev, e => e.preventDefault()));
+addEventListener('resize', fit);
+addEventListener('orientationchange', () => setTimeout(fit, 200));
+
+paintStars();
+fit();
+setMode('play');
+
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js');
+})();
+</script>
+</body>
+</html>
