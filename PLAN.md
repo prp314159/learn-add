@@ -170,7 +170,7 @@ So the README carries a small parent card, for the first sessions at least:
 | Game | What happens |
 | --- | --- |
 | ✋ **Play** | No questions. Tap apples out of two boxes onto the tray, and tap them off again. The sentence changes live: `3 + 2 = 5`. A full row of 5 sparkles, a full tray of 10 gets a fanfare, and one button tumbles everything off. |
-| 👀 **How many?** | The app deals two groups. He finds the total any way he likes and taps it. The `?` stays hidden until he is right. |
+| ➕ **How many?** | The app deals two groups. He finds the total any way he likes and taps it. The `?` stays hidden until he is right. |
 
 Play details: the tray always keeps itself tidy (no holes, colours together). A new apple lands in the
 next free place and then slides into its colour group. When an apple is tapped off, the rest slide along

@@ -89,6 +89,7 @@
     background: #fff; color: var(--ink); box-shadow: 0 calc(var(--u) * .04) 0 #0002;
   }
   .chip.ask { background: transparent; box-shadow: none; border: calc(var(--u) * .05) dashed #b9a58b; color: #b9a58b; }
+  .chip.gone { opacity: .55; }   /* take away: the number of the gone cars is faded, like them */
   .sign { font-size: calc(var(--u) * .7); font-weight: 800; color: #8a7760; line-height: 1; }
   .hide { visibility: hidden; }
   .zone { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
@@ -133,6 +134,9 @@
   /* Level A: bigger and wider apart than the tray places, so the last object never points at its button */
   #numrow.a { gap: calc(var(--u) * .5); }
   #numrow.a button { width: calc(var(--u) * 1.3); height: calc(var(--u) * 1.3); font-size: calc(var(--u) * .7); }
+  /* Level B of take away: eleven buttons, 0 to 10, a twentieth smaller so that they fit across the scene */
+  #numrow.eleven { gap: calc(var(--u) * .1); }
+  #numrow.eleven button { width: calc(var(--u) * .95); height: calc(var(--u) * .95); font-size: calc(var(--u) * .53); }
   #numrow.inert { pointer-events: none; opacity: .45; }
   #numrow button.good { background: #c8f1c1; box-shadow: 0 calc(var(--u) * .07) 0 #8fcf85; }
   #numrow button.soft { animation: shake .35s; }
@@ -150,6 +154,13 @@
     position: absolute; left: 50%; top: 50%; width: 66%; height: 66%; margin: -33% 0 0 -33%; border-radius: 50%;
     display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none;
     background: #fffffff0; font-size: calc(var(--a) * .46); font-weight: 800; box-shadow: 0 2px 6px #0003;
+  }
+  /* take away: a gone car is the same car, a little faded, in a waiting place under the number that must go */
+  .apple.gone { opacity: .55; }
+  .place {
+    position: absolute; left: 0; top: 0; width: var(--a); height: var(--a);
+    margin: calc(var(--a) / -2) 0 0 calc(var(--a) / -2); border-radius: 50%;
+    border: calc(var(--u) * .06) dashed #c4b195; pointer-events: none; will-change: transform;
   }
   #big {
     position: absolute; left: 0; top: 0; width: calc(var(--u) * 2.6); height: calc(var(--u) * 2.6); margin: calc(var(--u) * -1.3) 0 0 calc(var(--u) * -1.3);
@@ -177,7 +188,8 @@
   <div id="board">
     <div id="modes">
       <button class="mode" data-mode="play" aria-label="Play">✋</button>
-      <button class="mode" data-mode="ask" aria-label="How many?">👀</button>
+      <button class="mode" data-mode="ask" aria-label="How many?">➕</button>
+      <button class="mode" data-mode="take" aria-label="How many left?">➖</button>
     </div>
     <div id="meta">
       <div id="stars" aria-hidden="true"><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span></div>
@@ -185,7 +197,7 @@
     </div>
     <div id="scene">
       <div id="top">
-        <div id="sentence"><div class="chip" id="n1"></div><div class="sign" id="plus">+</div><div class="chip" id="n2"></div><div class="sign" id="eq">=</div><div class="chip" id="total"></div></div>
+        <div id="sentence"><div class="chip" id="n1"></div><div class="sign" id="op">+</div><div class="chip" id="n2"></div><div class="sign" id="eq">=</div><div class="chip" id="total"></div></div>
         <div id="zones"><div class="zone" id="zone1"></div><div></div><div class="zone" id="zone2"></div><div></div><div></div></div>
       </div>
       <div id="trayWrap">
@@ -224,17 +236,34 @@ const set = () => SETS[setIdx];
 const one = (a, b) => [{ a, b, c1: 0, c2: 1 }];
 // A turn-around pair, back to back. The colour stays with the quantity, so the second tray mirrors the first.
 const pair = (a, b) => [{ a, b, c1: 0, c2: 1 }, { a: b, b: a, c1: 1, c2: 0 }];
+// Take away: w on the tray, and t of them go. At least 1 goes, and all of them may go ("all gone": the answer is 0).
+const away = (w, t) => [{ w, t }];
+// The other part, back to back: the same whole, the other part leaves, and the two answers swap.
+const other = (w, t) => [{ w, t }, { w, t: w - t }];
 const PASS = {
-  A: [one(1, 1), one(2, 1), one(3, 1), one(4, 1),      // plus one
-      pair(3, 1), pair(2, 1), pair(4, 1),              // turn-arounds
-      one(2, 2), pair(3, 2)],                          // plus two and the double
-  B: [one(6, 1), pair(8, 1), pair(7, 2),               // plus one and plus two, a sample only
-      pair(5, 1), pair(5, 2), pair(5, 3), pair(5, 4), one(5, 5),   // five and some more
-      one(3, 3), pair(3, 4), one(4, 4), pair(4, 5),    // doubles, each with its near double
-      pair(9, 1), pair(8, 2), pair(7, 3), pair(6, 4),  // tens pairs
-      pair(3, 6)],
+  add: {
+    A: [one(1, 1), one(2, 1), one(3, 1), one(4, 1),      // plus one
+        pair(3, 1), pair(2, 1), pair(4, 1),              // turn-arounds
+        one(2, 2), pair(3, 2)],                          // plus two and the double
+    B: [one(6, 1), pair(8, 1), pair(7, 2),               // plus one and plus two, a sample only
+        pair(5, 1), pair(5, 2), pair(5, 3), pair(5, 4), one(5, 5),   // five and some more
+        one(3, 3), pair(3, 4), one(4, 4), pair(4, 5),    // doubles, each with its near double
+        pair(9, 1), pair(8, 2), pair(7, 3), pair(6, 4),  // tens pairs
+        pair(3, 6)],
+  },
+  take: {
+    A: [away(2, 1), away(3, 1), away(4, 1), away(5, 1),  // take away one: one fewer is the number before
+        away(3, 3),                                      // all gone, once: he meets the 0 button
+        away(3, 2), away(4, 2), away(5, 2),              // take away two
+        other(5, 2), other(4, 1), other(5, 1),           // the other part, back to back
+        away(5, 5)],                                     // the full row, all gone
+    B: [away(7, 1), away(9, 1), away(8, 2), away(6, 2), away(6, 6),         // take away one and two, and one all gone, a sample only
+        other(6, 1), other(7, 2), other(8, 3), other(9, 4), away(10, 5),    // five and some more, undone
+        away(6, 3), away(8, 4), other(7, 3),                                // halves and near halves
+        other(10, 1), other(10, 2), other(10, 3), other(10, 4), away(10, 10)],   // from ten: the tens pairs undone, then all gone
+  },
 };
-function pool(level) {
+function poolAdd(level) {
   const out = [];
   for (let a = 1; a <= 9; a++) for (let b = 1; b <= 9; b++) {
     const t = a + b;
@@ -242,53 +271,80 @@ function pool(level) {
   }
   return out;
 }
+// Every take-away fact of the level: the whole is 2 to 5, or 6 to 10, and from 1 to all of it goes.
+function poolTake(level) {
+  const out = [];
+  for (let w = level === 'A' ? 2 : 6; w <= (level === 'A' ? 5 : 10); w++) for (let t = 1; t <= w; t++) out.push({ w, t });
+  return out;
+}
 function shuffle(arr) {
   for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
   return arr;
 }
 
-/* ---------- what is remembered: his place in the sums and the parent dial ---------- */
+/* ---------- what is remembered: his place in the sums and the parent dial, per game ---------- */
 const KEY = 'learn-add-v1';
 const store = (() => {
-  const s = { level: 'A', pos: { A: 0, B: 0 } };
-  try { const j = JSON.parse(localStorage.getItem(KEY)); if (j) { if (j.level === 'B') s.level = 'B'; s.pos.A = j.pos.A | 0; s.pos.B = j.pos.B | 0; } } catch (e) {}
+  const s = { add: { level: 'A', pos: { A: 0, B: 0 } }, take: { level: 'A', pos: { A: 0, B: 0 } } };
+  try {
+    const j = JSON.parse(localStorage.getItem(KEY));
+    if (j) {
+      // the first version saved one level and one place: they were the addition's
+      const parts = { add: j.add || (j.level ? { level: j.level, pos: j.pos } : null), take: j.take };
+      for (const k in parts) {
+        const v = parts[k]; if (!v) continue;
+        if (v.level === 'B') s[k].level = 'B';
+        if (v.pos) { s[k].pos.A = v.pos.A | 0; s[k].pos.B = v.pos.B | 0; }
+      }
+    }
+  } catch (e) {}
   return s;
 })();
 function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
 
-const seq = { sub: 0, last: null, forced: null, bag: [], comeback: [], fromPass: false };
-function resetSeq() { seq.sub = 0; seq.forced = null; seq.bag = []; seq.comeback = []; }
+// The two question games, each with its own facts, its own place in them, its own level on the dial, and its own
+// sequence state (the place in a pair, the comebacks, the shuffle bag), so nothing is lost when he switches games.
+const newSeq = () => ({ sub: 0, last: null, forced: null, bag: [], comeback: [], fromPass: false });
+const games = {
+  ask:  { mem: store.add,  PASS: PASS.add,  pool: poolAdd,  seq: newSeq(), partner: s => ({ a: s.b, b: s.a, c1: 1, c2: 0 }) },
+  take: { mem: store.take, PASS: PASS.take, pool: poolTake, seq: newSeq(), partner: s => ({ w: s.w, t: s.w - s.t }) },
+};
+const sameSum = (s, t) => s.a === t.a && s.b === t.b && s.w === t.w && s.t === t.t;
+function resetSeq(g) { Object.assign(g.seq, newSeq(), { last: g.seq.last }); }
 
-function draw(level) {
-  if (!seq.bag.length) seq.bag = shuffle(pool(level));
-  let s = seq.bag.pop();
-  if (seq.last && s.a === seq.last.a && s.b === seq.last.b && seq.bag.length) { const t = seq.bag.pop(); seq.bag.unshift(s); s = t; }
-  if (s.a !== s.b && Math.random() < .3) seq.forced = { a: s.b, b: s.a, c1: 1, c2: 0 };   // a turn-around pair now and then
+function draw(g) {
+  const q = g.seq;
+  if (!q.bag.length) q.bag = shuffle(g.pool(g.mem.level));
+  let s = q.bag.pop();
+  if (q.last && sameSum(s, q.last) && q.bag.length) { const t = q.bag.pop(); q.bag.unshift(s); s = t; }
+  // a turn-around, or the other part, now and then. All gone has no other part: nothing is taken from nothing.
+  const p = g.partner(s);
+  if (p.t !== 0 && !sameSum(p, s) && Math.random() < .3) q.forced = p;
   return s;
 }
-function nextSum() {
-  const L = store.level;
-  seq.comeback.forEach(c => c.due--);
+function nextSum(g) {
+  const q = g.seq, L = g.mem.level, pass = g.PASS[L];
+  q.comeback.forEach(c => c.due--);
   let s;
-  if (seq.sub === 0 && !seq.forced && seq.comeback.length && seq.comeback[0].due <= 0) {
-    s = seq.comeback.shift().sum; seq.fromPass = false;
-  } else if (store.pos[L] < PASS[L].length) {
-    s = PASS[L][store.pos[L]][seq.sub]; seq.fromPass = true;
-  } else if (seq.forced) {
-    s = seq.forced; seq.forced = null; seq.fromPass = false;
+  if (q.sub === 0 && !q.forced && q.comeback.length && q.comeback[0].due <= 0) {
+    s = q.comeback.shift().sum; q.fromPass = false;
+  } else if (g.mem.pos[L] < pass.length) {
+    s = pass[g.mem.pos[L]][q.sub]; q.fromPass = true;
+  } else if (q.forced) {
+    s = q.forced; q.forced = null; q.fromPass = false;
   } else {
-    s = draw(L); seq.fromPass = false;
+    s = draw(g); q.fromPass = false;
   }
-  seq.last = s;
+  q.last = s;
   return s;
 }
-function sumSolved(neededNumbers) {
-  const L = store.level;
-  if (neededNumbers) seq.comeback.push({ sum: seq.last, due: 3 });   // it comes back, so he gets to solve it by himself
-  if (!seq.fromPass) return;
-  seq.sub++;
+function sumSolved(g, neededNumbers) {
+  const q = g.seq, L = g.mem.level;
+  if (neededNumbers) q.comeback.push({ sum: q.last, due: 3 });   // it comes back, so he gets to solve it by himself
+  if (!q.fromPass) return;
+  q.sub++;
   // his place is saved only between pairs, so a new session never starts in the middle of a turn-around
-  if (seq.sub >= PASS[L][store.pos[L]].length) { seq.sub = 0; store.pos[L]++; save(); }
+  if (q.sub >= g.PASS[L][g.mem.pos[L]].length) { q.sub = 0; g.mem.pos[L]++; save(); }
 }
 
 /* ---------- sound: small synthesised notes, and a few spoken words (see "voice" below) ---------- */
@@ -412,6 +468,7 @@ function fit() {
   U = wide ? Math.min(W / 15.2, H / 7.4) : Math.min(W / 12.5, H / 8.6);
   document.documentElement.style.setProperty('--u', U + 'px');
   apples.forEach(a => setPos(a, where(a), 0));
+  take.places.forEach((p, i) => { p.style.transform = T(placePos(i)); });
 }
 function rectIn(el) {
   const r = el.getBoundingClientRect(), L = layer.getBoundingClientRect();
@@ -428,15 +485,17 @@ function homePos(zone, n, i) {
 function where(a) {
   if (a.at.t === 'tray') return trayPos(a.at.slot);
   if (a.at.t === 'home' || a.at.t === 'queued') return homePos(a.zone, a.n, a.i);
+  if (a.at.t === 'place') return placePos(a.at.i);
   return a.pos;
 }
 function buildTray(rows) {
   tray.innerHTML = ''; cells = [];
   for (let i = 0; i < rows * 5; i++) { const c = document.createElement('div'); c.className = 'cell'; tray.appendChild(c); cells.push(c); }
 }
-function buildNumrow(n) {
-  numrow.innerHTML = ''; numrow.classList.toggle('a', n === 5);
-  for (let i = 1; i <= n; i++) { const b = document.createElement('button'); b.textContent = i; b.dataset.n = i; numrow.appendChild(b); }
+// The buttons from..to. Level A's styling keys on the level, not on a count of buttons: take away has one more, the 0.
+function buildNumrow(from, to, levelA) {
+  numrow.innerHTML = ''; numrow.classList.toggle('a', levelA); numrow.classList.toggle('eleven', to - from >= 10);
+  for (let i = from; i <= to; i++) { const b = document.createElement('button'); b.textContent = i; b.dataset.n = i; numrow.appendChild(b); }
 }
 
 /* ---------- objects on the screen ---------- */
@@ -516,11 +575,11 @@ function enqueue(fn) {
   const q = Q, g = gen; q.pending++;
   q.chain = q.chain.then(async () => { if (g === gen) await fn(); })
     .catch(e => console.error(e))
-    .then(() => { q.pending--; if (q === Q && q.pending === 0 && mode === 'ask') askIdle(); });
+    .then(() => { q.pending--; if (q === Q && q.pending === 0) { if (mode === 'ask') askIdle(); else if (mode === 'take') takeIdle(); } });
 }
 
 /* ---------- the sentence ---------- */
-const chips = { n1: $('#n1'), n2: $('#n2'), total: $('#total'), plus: $('#plus'), eq: $('#eq') };
+const chips = { n1: $('#n1'), n2: $('#n2'), total: $('#total'), op: $('#op'), eq: $('#eq') };
 function paintChip(el, c) { el.style.background = set().bg[c]; el.style.color = set().fg[c]; el.classList.remove('ask'); }
 function plainChip(el, askMark) { el.style.background = ''; el.style.color = ''; el.classList.toggle('ask', askMark); }
 
@@ -543,7 +602,7 @@ function playSentence(landed) {
   const r = play.list.filter(a => a.c === 0).length, y = play.list.length - r, both = r > 0 && y > 0;
   chips.n1.textContent = r; chips.n2.textContent = y; chips.total.textContent = r + y;
   chips.n1.classList.toggle('hide', !r); chips.n2.classList.toggle('hide', !y);
-  [chips.plus, chips.eq, chips.total].forEach(el => el.classList.toggle('hide', !both));   // one colour shows just "3", never "3 + 0"
+  [chips.op, chips.eq, chips.total].forEach(el => el.classList.toggle('hide', !both));   // one colour shows just "3", never "3 + 0"
   if (landed) pulse(both ? chips.total : (r ? chips.n1 : chips.n2), 1.3, 350);
 }
 // The tray keeps itself tidy: no holes, colours together, so the rows of 5 stay true.
@@ -593,17 +652,17 @@ function playTumble() {
   });
 }
 
-/* ==================== 👀 How many? ==================== */
+/* ==================== ➕ How many? ==================== */
 const ask = { sum: null, apples: [], total: 0, onTray: 0, misses: 0, busy: false, tidying: false, pending: null, run: 0, runTimer: 0 };
 let stars = 0;
 
 function paintStars() { document.querySelectorAll('#stars span').forEach((s, i) => s.classList.toggle('got', i < stars)); }
 
 function deal() {
-  const s = nextSum();
+  const s = nextSum(games.ask);
   clearApples();
   Object.assign(ask, { sum: s, apples: [], total: s.a + s.b, onTray: 0, misses: 0, busy: false, tidying: false, pending: null, run: 0 });
-  [chips.n1, chips.n2, chips.total, chips.plus, chips.eq].forEach(el => el.classList.remove('hide'));
+  [chips.n1, chips.n2, chips.total, chips.op, chips.eq].forEach(el => el.classList.remove('hide'));
   chips.n1.textContent = s.a; paintChip(chips.n1, s.c1);
   chips.n2.textContent = s.b; paintChip(chips.n2, s.c2);
   chips.total.textContent = '?'; plainChip(chips.total, true);
@@ -630,11 +689,14 @@ function askTapApple(a) {
       squash(a); sfx.note(slot + 1);
     });
   } else if (a.at.t === 'tray') {
-    // Touching is counting: a wiggle and the next note up, no number. After a pause the run starts again.
-    ask.run = Math.min(ask.run + 1, 15);
-    wiggle(a.face); sfx.note(ask.run);
-    clearTimeout(ask.runTimer); ask.runTimer = setTimeout(() => { ask.run = 0; }, 1800);
+    touchCount(ask, a);
   }
+}
+// Touching is counting: a wiggle and the next note up, no number. After a pause the run starts again. Both question games.
+function touchCount(st, a) {
+  st.run = Math.min(st.run + 1, 15);
+  wiggle(a.face); sfx.note(st.run);
+  clearTimeout(st.runTimer); st.runTimer = setTimeout(() => { st.run = 0; }, 1800);
 }
 
 // If the colours ended up mixed, slide them into first group, then second group. If not, nothing moves.
@@ -661,11 +723,12 @@ async function askIdle() {
   if (ask.pending != null && !ask.busy) { const n = ask.pending; ask.pending = null; evaluate(n); }
 }
 
-// He may answer at any moment, even before moving a single object.
+// He may answer at any moment, even before moving a single object. In take away, once the question has arrived.
 function answer(n) {
-  if (ask.busy) return;
-  if (Q.pending > 0 || ask.tidying) { ask.pending = n; return; }
-  evaluate(n);
+  const st = mode === 'take' ? take : ask;
+  if (st.busy || (st === take && !take.asked)) return;
+  if (Q.pending > 0 || st.tidying) { st.pending = n; return; }
+  if (st === take) takeEvaluate(n); else evaluate(n);
 }
 
 async function evaluate(n) {
@@ -680,7 +743,7 @@ async function evaluate(n) {
     await sleep(350); if (g !== gen) return;
     await bringRest(g); if (g !== gen) return;
     await tidy(); if (g !== gen) return;
-    await recount(g, ask.misses >= 2); if (g !== gen) return;
+    await recount(g, ask.apples.slice().sort((p, q) => p.at.slot - q.at.slot), ask.misses >= 2); if (g !== gen) return;
     ask.busy = false; numrow.classList.remove('inert');
     return;
   }
@@ -690,9 +753,9 @@ async function evaluate(n) {
   await bringRest(g); if (g !== gen) return;
   await tidy(); if (g !== gen) return;
   if (ask.total === 10) { sfx.fanfare(); glowCells(0, 10); bits('✨', centre(cells[0]), centre(cells[9]), 10); await sleep(700); if (g !== gen) return; }
-  await readBack(g); if (g !== gen) return;
+  await readBack(g, askBeats()); if (g !== gen) return;
   await giveStar(g); if (g !== gen) return;
-  sumSolved(ask.misses >= 2);
+  sumSolved(games.ask, ask.misses >= 2);
   if (stars >= 5) {
     await trophy(); if (g !== gen) return;
     stars = 0; paintStars();
@@ -703,8 +766,8 @@ async function evaluate(n) {
 }
 
 // About one object per second up to 5, quicker for bigger totals, never more than about 6 seconds in all.
-async function recount(g, withNumbers) {
-  const row = ask.apples.slice().sort((p, q) => p.at.slot - q.at.slot);
+// row is what gets counted: everything in addition, what is left on the tray in take away.
+async function recount(g, row, withNumbers) {
   const step = Math.min(1000, 6000 / row.length);
   await sleep(250);
   for (let i = 0; i < row.length; i++) {
@@ -721,20 +784,23 @@ async function recount(g, withNumbers) {
 // The one place where the symbols get tied to the things, so it happens every time.
 // It is also where the words come in. The sentence is said in one breath, and each beat starts as the
 // voice gets to its part, so every word lands with its numeral and its group.
-async function readBack(g) {
-  const s = ask.sum, talk = voiceOn(), slow = talk ? 100 : 0;
-  const beats = [
-    { chip: chips.n1,    group: ask.apples.filter(a => a.group === 1), k: 1.35, ms: 600, text: WORDS[s.a] },
-    { chip: chips.n2,    group: ask.apples.filter(a => a.group === 2), k: 1.35, ms: 600, text: `${SAYING.and} ${WORDS[s.b]}` },
-    { chip: chips.total, group: ask.apples,                            k: 1.5,  ms: 700, text: `${SAYING.make} ${WORDS[ask.total]}` },
-  ];
+// Each beat pulses a numeral with its group. bright: faded cars that brighten for the beat. also: anything else the beat shows.
+const askBeats = () => [
+  { chip: chips.n1,    group: ask.apples.filter(a => a.group === 1), k: 1.35, ms: 600, text: WORDS[ask.sum.a] },
+  { chip: chips.n2,    group: ask.apples.filter(a => a.group === 2), k: 1.35, ms: 600, text: `${SAYING.and} ${WORDS[ask.sum.b]}` },
+  { chip: chips.total, group: ask.apples,                            k: 1.5,  ms: 700, text: `${SAYING.make} ${WORDS[ask.total]}` },
+];
+async function readBack(g, beats) {
+  const talk = voiceOn(), slow = talk ? 100 : 0;
   const voice = say(beats.map(b => b.text));
   for (let i = 0; i < beats.length; i++) {
     const b = beats[i], ms = b.ms + slow;
     if (i) await voice.reach[i];   // the first beat does not wait: a voice that fails to start must not leave a hole
     if (g !== gen) return;
     pulse(b.chip, b.k, ms); b.group.forEach(a => pulse(a.face, 1.25, ms)); sfx.read(i, talk);
-    await sleep(i === 2 ? ms + 50 : ms); if (g !== gen) return;
+    (b.bright || []).forEach(a => anim(a.el, [{ opacity: .55 }, { opacity: 1 }, { opacity: .55 }], { duration: ms }));
+    if (b.also) b.also();
+    await sleep(i === beats.length - 1 ? ms + 50 : ms); if (g !== gen) return;
   }
   await voice.done;
 }
@@ -762,39 +828,199 @@ function trophy() {
   });
 }
 
+/* ==================== ➖ How many left? ==================== */
+// The whole is on the tray. He taps cars away into waiting places under the number that must go, then taps how many
+// are left. The gone cars stay in sight, faded: he sees 5 as 3 on the tray and 2 gone, the picture he knows from 3 + 2 = 5.
+const take = { sum: null, apples: [], whole: 0, taken: 0, gone: [], places: [], asked: false, askTimer: 0, misses: 0, busy: false, pending: null, run: 0, runTimer: 0 };
+const placePos = i => homePos($('#zone2'), take.taken, i);
+const onTray = () => take.apples.filter(a => a.at.t === 'tray').sort((p, q) => p.at.slot - q.at.slot);
+const inPlaces = () => take.apples.filter(a => a.at.t === 'place');
+const fade   = (a, ms = 250) => { a.el.classList.add('gone');    anim(a.el, [{ opacity: 1 }, { opacity: .55 }], { duration: ms }); };
+const unfade = (a, ms = 250) => { a.el.classList.remove('gone'); anim(a.el, [{ opacity: .55 }, { opacity: 1 }], { duration: ms }); };
+const popChip = el => anim(el, [{ transform: 'scale(0)' }, { transform: 'scale(1.15)' }, { transform: 'scale(1)' }], { duration: 300 });
+function clearPlaces() { take.places.forEach(p => p.remove()); take.places = []; }
+
+// Here are 5: the whole appears under its numeral and slides onto the tray as one group. Nothing is counted for him.
+function takeDeal() {
+  const s = nextSum(games.take);
+  clearApples(); clearPlaces(); clearTimeout(take.askTimer);
+  Object.assign(take, { sum: s, apples: [], whole: s.w, taken: s.t, gone: Array(s.t).fill(null), asked: false, misses: 0, busy: false, pending: null, run: 0 });
+  chips.n1.textContent = s.w; paintChip(chips.n1, 0); chips.n1.classList.remove('hide');
+  chips.n2.textContent = s.t; paintChip(chips.n2, 0); chips.n2.classList.add('gone');
+  chips.total.textContent = '?'; plainChip(chips.total, true);
+  [chips.op, chips.n2, chips.eq, chips.total].forEach(el => el.classList.add('hide'));   // the sentence shows just the whole for now
+  numrow.classList.add('inert');
+  numrow.querySelectorAll('button').forEach(b => b.classList.remove('good', 'soft'));
+  const zone = $('#zone1');
+  for (let i = 0; i < s.w; i++) {
+    const a = makeApple(0); Object.assign(a, { zone, n: s.w, i, at: { t: 'home' } });
+    setPos(a, homePos(zone, s.w, i), 0); popIn(a, i * 40);
+    take.apples.push(a);
+  }
+  enqueue(async () => {
+    const g = gen;
+    await sleep(450 + s.w * 40); if (g !== gen) return;
+    take.apples.forEach((a, i) => { a.at = { t: 'tray', slot: i }; setPos(a, trayPos(i), 460); });
+    sfx.slide(); await sleep(500); if (g !== gen) return;
+    takeWait();
+  });
+}
+// The question waits a moment after the whole has landed, and every touch on a car restarts the wait, so he can count
+// the whole in peace and a car never leaves mid-count. A second and a half is a guess, to be tuned by watching him.
+function takeWait() {
+  clearTimeout(take.askTimer);
+  if (!take.asked) take.askTimer = setTimeout(takeAsk, 1500);
+}
+// "− 2 = ?" pops into the sentence, and two empty places pop in under the 2, one after the other, with a tok each.
+// Two places, two must go. From this moment a touch on a car on the tray takes it away, and the number row wakes up.
+function takeAsk() {
+  take.asked = true;
+  enqueue(async () => {
+    const g = gen;
+    [chips.op, chips.n2, chips.eq, chips.total].forEach(el => { el.classList.remove('hide'); popChip(el); });
+    const gap = Math.min(180, 900 / take.taken);
+    for (let i = 0; i < take.taken; i++) {
+      const p = document.createElement('div'); p.className = 'place'; layer.appendChild(p); take.places.push(p);
+      const at = placePos(i); p.style.transform = T(at);
+      anim(p, [{ transform: T({ ...at, s: 0 }) }, { transform: T({ ...at, s: at.s * 1.2 }) }, { transform: T(at) }], { duration: 300 });
+      sfx.tok();
+      await sleep(gap); if (g !== gen) return;
+    }
+    numrow.classList.remove('inert');
+  });
+}
+
+// One tap, one car, one rule: a car only goes where there is a place for it, and a car with nowhere to go is counted.
+function takeTapApple(a) {
+  if (take.busy) return;
+  if (a.at.t === 'place') {
+    // Undo: it hops back onto the tray and plays the tray's count. He took one too many, or changed his mind, and it costs nothing.
+    take.gone[a.at.i] = null; a.at = { t: 'fly' };
+    enqueue(async () => {
+      const slot = onTray().length;
+      a.at = { t: 'tray', slot }; unfade(a);
+      await hop(a, trayPos(slot));
+      squash(a); sfx.note(slot + 1);
+    });
+    return;
+  }
+  if (a.at.t !== 'tray') return;
+  if (!take.asked) { touchCount(take, a); takeWait(); return; }   // before the question: touching is counting, and the question waits
+  const i = take.gone.indexOf(null);
+  if (i < 0) { touchCount(take, a); return; }                      // the places are full: touching is counting, as in "How many?"
+  // It hops up into the next place, the tray closes the gap behind it, and the note says how many are now in the places.
+  take.gone[i] = a; a.at = { t: 'fly' };
+  enqueue(async () => {
+    takeTidy();
+    await hop(a, placePos(i));
+    a.at = { t: 'place', i }; fade(a);
+    squash(a); sfx.note(inPlaces().length);
+  });
+}
+// The tray closes the gap behind a car that leaves, so the rows of 5 stay true.
+function takeTidy(ms = 260) {
+  onTray().forEach((a, i) => { if (a.at.slot !== i) { a.at.slot = i; setPos(a, trayPos(i), ms); } });
+}
+// The proof moves a group: the cars that must go slide up into the places together, with one slide sound. Only his own
+// taps move cars one at a time. The ones that go are the last on the tray, so what is left stays at the front.
+async function takeProof() {
+  const empty = take.gone.map((a, i) => a ? -1 : i).filter(i => i >= 0);
+  if (!empty.length) return;
+  const on = onTray();
+  on.slice(on.length - empty.length).forEach((a, k) => {
+    const i = empty[k]; take.gone[i] = a; a.at = { t: 'place', i }; fade(a, 460); setPos(a, placePos(i), 460);
+  });
+  sfx.slide(); await sleep(500);
+}
+function takeIdle() {
+  if (take.pending != null && !take.busy) { const n = take.pending; take.pending = null; takeEvaluate(n); }
+}
+
+async function takeEvaluate(n) {
+  const g = gen, btn = numrow.querySelector(`button[data-n="${n}"]`), left = take.whole - take.taken;
+  take.busy = true; take.pending = null; numrow.classList.add('inert');
+  clearTimeout(take.runTimer); take.run = 0;
+
+  if (n !== left) {
+    // A miss: no buzzer, no red cross. Any places still empty get filled, then what is left is counted, with numbers from the second miss on.
+    take.misses++;
+    sfx.boop(); btn.classList.remove('soft'); void btn.offsetWidth; btn.classList.add('soft');
+    await sleep(350); if (g !== gen) return;
+    await takeProof(); if (g !== gen) return;
+    await takeRecount(g, take.misses >= 2); if (g !== gen) return;
+    take.busy = false; numrow.classList.remove('inert');
+    return;
+  }
+
+  sfx.chord(); btn.classList.add('good');
+  chips.total.textContent = left; paintChip(chips.total, 0); pulse(chips.total, 1.3, 350);
+  await takeProof(); if (g !== gen) return;
+  await readBack(g, takeBeats()); if (g !== gen) return;
+  await giveStar(g); if (g !== gen) return;
+  sumSolved(games.take, take.misses >= 2);
+  if (stars >= 5) {
+    await trophy(); if (g !== gen) return;
+    stars = 0; paintStars();
+    setIdx = (setIdx + 1) % SETS.length;   // a new object as a treat, never inside one sum
+  }
+  await sleep(150); if (g !== gen) return;
+  takeDeal();
+}
+// The help counts what is left, never the whole and never the gone ones, because "how many are left" is the question.
+// When nothing is left, the help is the empty tray itself: a glow, and from the second miss on the big 0.
+async function takeRecount(g, withNumbers) {
+  const row = onTray();
+  if (row.length) return recount(g, row, withNumbers);
+  await sleep(250); if (g !== gen) return;
+  glowCells(0, take.whole); sfx.slide();
+  await sleep(900); if (g !== gen) return;
+  if (withNumbers) { if (VOICE) sayNumber(0); await showBig(0); }
+}
+// The read-back: 5 with all five cars (the faded ones brighten for the beat), 2 with the gone ones, 3 with the tray.
+// For all gone, the empty tray glows for its beat.
+function takeBeats() {
+  const gone = inPlaces(), on = onTray(), left = take.whole - take.taken;
+  return [
+    { chip: chips.n1,    group: take.apples, bright: gone, k: 1.35, ms: 600, text: WORDS[take.whole] },
+    { chip: chips.n2,    group: gone,        bright: gone, k: 1.35, ms: 600, text: `take away ${WORDS[take.taken]}` },
+    { chip: chips.total, group: on,                        k: 1.5,  ms: 700, text: `leaves ${WORDS[left]}`, also: left ? null : () => glowCells(0, take.whole) },
+  ];
+}
 /* ==================== modes, the parent dial, taps ==================== */
 function setMode(m) {
-  mode = m; newGen(); clearApples(); hideHand();
-  clearTimeout(ask.runTimer);
+  mode = m; newGen(); clearApples(); clearPlaces(); hideHand();
+  clearTimeout(ask.runTimer); clearTimeout(take.runTimer); clearTimeout(take.askTimer);
   document.querySelectorAll('.mode').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
   $('#zone1').innerHTML = ''; $('#zone2').innerHTML = '';
-  const isPlay = m === 'play';
+  const isPlay = m === 'play', isTake = m === 'take', mem = (isTake ? games.take : games.ask).mem;
   document.body.classList.toggle('play', isPlay);
   $('#stars').classList.toggle('hide', isPlay);
   $('#tumble').classList.toggle('hide', !isPlay);
   numrow.classList.toggle('hide', isPlay);
-  $('#dial span').textContent = store.level;
+  chips.op.textContent = isTake ? '−' : '+';
+  chips.n2.classList.remove('gone');
+  $('#dial span').textContent = mem.level;   // Play has no level: there the dial shows and changes the addition level
   if (isPlay) {
-    buildTray(2); buildNumrow(10);
+    buildTray(2); buildNumrow(1, 10, false);
     play.list = []; play.reserved = 0;
     paintChip(chips.n1, 0); paintChip(chips.n2, 1); plainChip(chips.total, false);
     buildPiles(); playSentence(false);
   } else {
-    const A = store.level === 'A';
-    buildTray(A ? 1 : 2); buildNumrow(A ? 5 : 10);   // Level A: totals up to 5, top row only
-    seq.sub = 0;
-    deal();
+    const A = mem.level === 'A';
+    buildTray(A ? 1 : 2); buildNumrow(isTake ? 0 : 1, A ? 5 : 10, A);   // Level A: totals up to 5, top row only. Take away has a 0 at the left.
+    games[m].seq.sub = 0;
+    if (isTake) takeDeal(); else deal();
   }
 }
 
 document.querySelectorAll('.mode').forEach(b => b.addEventListener('pointerdown', () => { if (b.dataset.mode !== mode) { sfx.tok(); setMode(b.dataset.mode); } }));
 layer.addEventListener('pointerdown', e => {
   const el = e.target.closest('.apple'); if (!el) return;
-  if (mode === 'play') playRemove(el._a); else askTapApple(el._a);
+  if (mode === 'play') playRemove(el._a); else if (mode === 'ask') askTapApple(el._a); else takeTapApple(el._a);
 });
 $('#zones').addEventListener('pointerdown', e => { const p = e.target.closest('.pile'); if (p && mode === 'play') playAdd(+p.dataset.c); });
 $('#tumble').addEventListener('pointerdown', () => { if (mode === 'play') playTumble(); });
-numrow.addEventListener('pointerdown', e => { const b = e.target.closest('button'); if (b && mode === 'ask') answer(+b.dataset.n); });
+numrow.addEventListener('pointerdown', e => { const b = e.target.closest('button'); if (b && mode !== 'play') answer(+b.dataset.n); });
 
 // The parent dial: press and hold, so he does not flip it by accident.
 (() => {
@@ -803,7 +1029,9 @@ numrow.addEventListener('pointerdown', e => { const b = e.target.closest('button
   dial.addEventListener('pointerdown', () => {
     dial.classList.add('holding');
     timer = setTimeout(() => {
-      stop(); store.level = store.level === 'A' ? 'B' : 'A'; save(); resetSeq(); sfx.ting(); setMode(mode);
+      stop();
+      const g = games[mode === 'take' ? 'take' : 'ask'];   // in Play, the addition level
+      g.mem.level = g.mem.level === 'A' ? 'B' : 'A'; save(); resetSeq(g); sfx.ting(); setMode(mode);
     }, 900);
   });
   ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => dial.addEventListener(ev, stop));
@@ -813,19 +1041,24 @@ numrow.addEventListener('pointerdown', e => { const b = e.target.closest('button
 const hand = $('#hand'); let lastTouch = performance.now(), handAnim = null;
 function hideHand() { hand.style.opacity = 0; if (handAnim) { handAnim.cancel(); handAnim = null; } }
 function showHand() {
-  if (mode === 'ask' && (ask.busy || Q.pending)) return;
+  const st = mode === 'take' ? take : ask;
+  if (mode !== 'play' && (st.busy || Q.pending)) return;
   let from, to, glyph = '👆';
+  const sweep = () => {   // sweep along the whole number row, never point at one number
+    const bs = numrow.querySelectorAll('button'); glyph = '👇';
+    from = centre(bs[0]); to = centre(bs[bs.length - 1]);
+    from.y -= U * 1.1; to.y -= U * 1.1;
+  };
   if (mode === 'play') {
     if (play.reserved > 0) return;
     from = to = centre(play.piles[0]);
-  } else {
+  } else if (mode === 'ask') {
     const home = ask.apples.find(a => a.at.t === 'home');
-    if (home) from = to = home.pos;
-    else {   // everything is on the tray: sweep along the whole number row, never point at one number
-      const bs = numrow.querySelectorAll('button'); glyph = '👇';
-      from = centre(bs[0]); to = centre(bs[bs.length - 1]);
-      from.y -= U * 1.1; to.y -= U * 1.1;
-    }
+    if (home) from = to = home.pos; else sweep();   // everything is on the tray
+  } else {
+    if (!take.asked) return;
+    const car = take.gone.includes(null) ? take.apples.find(a => a.at.t === 'tray') : null;   // a place is empty: point at a car
+    if (car) from = to = car.pos; else sweep();
   }
   hand.textContent = glyph; hand.style.opacity = 1;
   const dx = -U * .5, dy = glyph === '👆' ? U * .1 : 0, tap = U * .18;

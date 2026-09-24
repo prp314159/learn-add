@@ -14,7 +14,7 @@ left.
   at the top, a number sentence above them, a row of number buttons below the tray.
 - ✋ **Play:** no questions. He taps objects out of two boxes onto the tray and off again. The sentence
   follows the tray live (`3 + 2 = 5`).
-- 👀 **How many?:** the app deals two groups. He moves them onto the tray one tap at a time if he wants
+- ➕ **How many?:** the app deals two groups. He moves them onto the tray one tap at a time if he wants
   to, or answers straight away, and the groups slide onto the tray as the proof. After a miss, a slow
   bounce of the objects with notes only, after a second miss with numbers. A right answer reads the
   sentence back: each numeral pulses with its group. Five stars win a trophy.
@@ -140,13 +140,7 @@ Two things make this more than "count what is left":
    the proof moves in addition. His taps move cars one at a time; the app moves groups.
 5. **Right:** the `?` becomes `3`, and the read-back follows: `5` pulses with all five cars (the faded ones
    brighten for that beat), `2` with the gone ones, `3` with the tray. The parent says "5, take away 2,
-   leaves 3."
-   **The flip**, only when this sum was the second of an "other part" pair: the gone cars slide back onto
-   the tray, the sentence turns round into `3 + 2 = 5`, and a quick read-back of the addition follows,
-   `3` with the three, `2` with the two that came back, `5` with the full tray. Two seconds that show
-   subtraction undoing addition, at the moment the two parts have just swapped roles. The parent says
-   "and 3 and 2 make 5."
-   Then a star.
+   leaves 3." A star.
 6. **First miss:** a soft boop, no buzzer, no red cross. Any places still empty get filled, then the cars
    left on the tray bounce one at a time with notes only. He counts along and tries again.
    **Second miss:** the same bounce with numbers (1, 2, 3), ending in one big `3` over the tray. A sum
@@ -195,11 +189,11 @@ Then the next sum. Five stars, the trophy, and the object changes as a treat, as
   up together, never one by one. Single hops with a note each would be the act done for him, and the
   addition rule holds here too: his taps move one at a time, the app moves groups. It also keeps the quick
   answer quick.
-- **The flip is in, and rare.** The whole reason for a third game on the same tray is that subtraction is
-  addition undone, and the flip is the only moment that shows it: the gone cars come back, and
-  `5 − 2 = 3` turns into `3 + 2 = 5`. It plays only after the second sum of an "other part" pair, when the
-  two parts have just swapped roles, so it stays a small event, and it adds no tapping. The first draft
-  left it for later because it lengthens a sum; it is in because it is what the shared tray is for.
+- **One sentence per sum.** The link to addition is in the picture, the two parts of the whole, and in the
+  parent's words, not in a second number sentence. The flip (under "Next") was built into the first
+  version and taken out again: `5 − 3 = 2` turning into `2 + 3 = 5` right after the read-back was
+  confusing, two sentences for one picture in one breath. It waits until the other-part pairs are
+  familiar.
 - **Knowing the answer is never punished with waiting.** Answering at once, the proof and the read-back
   take three to four seconds in all.
 - **Zero is in, as "all gone".** 5 take away 5 is the happiest subtraction fact, and the empty tray is
@@ -282,8 +276,7 @@ sums, and the shuffle brings the other two:
 3. **Take away two:** 3−2, 4−2, 5−2.
 4. **The other part, back to back:** 5−2 then 5−3, 4−1 then 4−3, 5−1 then 5−4. The same whole on the
    tray, the other part leaves, and the two answers swap. This is subtraction's turn-around: it shows the
-   two parts of a whole, and it quietly shows that the order matters (5−2 and 5−3 are not the same). The
-   flip plays after the second of each pair.
+   two parts of a whole, and it quietly shows that the order matters (5−2 and 5−3 are not the same).
 5. **All gone, the full row:** 5−5, last of all. 2−2 and 4−4 come in the shuffle.
 
 After the first pass: shuffled, never the same fact twice in a row, and an "other part" pair now and then.
@@ -314,25 +307,31 @@ After the first pass, the shuffle draws from all 40 facts.
 
 After watching him. In rough order of value. None of these is in the first version.
 
-1. **No places.** The scaffold comes off. The outlines go, the `2` stands alone, and the gone cars still
+1. **The flip.** After the read-back, the gone cars slide back onto the tray and the sentence turns into
+   `3 + 2 = 5`: two seconds that show subtraction undoing addition. It was in the first build, after the
+   second sum of an "other part" pair, and it came out again: right after `5 − 3 = 2`, a second sentence
+   `2 + 3 = 5` for the same cars was confusing, not clarifying. It comes back only once the other-part
+   pairs are easy for him, and probably as a dial stage rather than for everyone, so that the parent
+   decides when he is ready to see two sentences for one picture.
+2. **No places.** The scaffold comes off. The outlines go, the `2` stands alone, and the gone cars still
    gather under it, but nothing stops him: he must read the `2` and stop himself. Too many or too few is a
    miss. First miss: the gone cars bounce with notes only, so he counts how many he took, and undo lets him
    put one back or take one more. Second miss: the numbers on the gone cars, ending in a big `2` over
    them. A dial stage, likely within weeks, since he reads numerals well. The sign that he is ready: he
    takes exactly the number every time and never needs the full places to stop him.
-2. **The missing part.** `5 − ? = 3` on the tray: five places, three cars, how many gone? He can solve it
+3. **The missing part.** `5 − ? = 3` on the tray: five places, three cars, how many gone? He can solve it
    by counting the empty places, so it is easier than the lid, and it is the bridge to `3 + ? = 5` in the
    other game. It comes before the lid because the link between the two games is the reason they share
    one tray.
-3. **The lid.** The whole hops onto the tray and a lid marked `7` closes over it. Then 2 hop out from under
+4. **The lid.** The whole hops onto the tray and a lid marked `7` closes over it. Then 2 hop out from under
    it into the places. "How many are still under?" With what is left hidden, he must count back or know the
    fact. Take away 1 to 3 only. This is the one place where the notes go down: each car that comes out
    plays the count of what is still under the lid (6, then 5), because counting back is the strategy being
    learned here. First miss: the `7` pulses with its note, the gone ones bounce. Second miss: the lid lifts
    and the numbered count runs.
-4. **How many more.** Two colours lined up in the two rows, red along the top, blue along the bottom, "how
+5. **How many more.** Two colours lined up in the two rows, red along the top, blue along the bottom, "how
    many more red?" The overhang is the answer. The second meaning of subtraction, with its own picture.
-5. **Mixed.** A dial stage where the question game deals both kinds, so he has to look at the sign. The
+6. **Mixed.** A dial stage where the question game deals both kinds, so he has to look at the sign. The
    real test that both ideas are his.
 
 ## Tech
@@ -350,8 +349,7 @@ After watching him. In rough order of value. None of these is in the first versi
 - New: the deal of the whole onto the tray; the waiting places and their arrival (a short timer that every
   touch on a car restarts, and the number row inert until then); the take-away tap and its undo; the faded
   gone group and the faded `2` chip; the group slide as the proof; the sentence with a real minus sign
-  (`−`, U+2212, never a hyphen: it must be as heavy as the `+`); the empty-tray help for all gone; the
-  flip after the second sum of a pair.
+  (`−`, U+2212, never a hyphen: it must be as heavy as the `+`); the empty-tray help for all gone.
 - The number row: six buttons in Level A, eleven in Level B, `0` at the left. Level B's buttons are a
   twentieth smaller so that eleven fit across the scene. On a phone in landscape that is about 50 px,
   above the 44 pt minimum but tighter than the rest. The Level A styling keys on the level, not on a count
@@ -362,11 +360,13 @@ After watching him. In rough order of value. None of these is in the first versi
   The old single level becomes the addition level, and an old saved file is read as such.
 - Sums: a first-pass table in the same shape as the addition one, each fact as whole and taken, and taken
   may equal the whole.
-- Icon: ➖, the heavy minus sign (U+2796). It is drawn like the other two icons, it is the sign that heads
-  the sentence inside, and it cannot be mistaken for the hand of Play (👋 and ✋ are the same hand at
-  button size). It is a doorway, not a lesson: he taps it to choose the game, and the same sign is the
-  first thing he sees inside, so the sign becomes the name of the act. A thin text `−` or `⊝` would look
-  like a dash on the button; the emoji is as heavy as the other two.
+- Icons: ➕ for "How many?" and ➖ for "How many left?", the heavy plus and minus signs (U+2795, U+2796),
+  next to the hand of Play. "How many?" was 👀 while it was the only question game; with a second one the
+  eyes no longer tell the two apart, and the two signs do. Each is the sign that heads the sentence inside,
+  so the pair is a doorway, not a lesson: he taps a sign to choose the game, and the same sign is the first
+  thing he sees inside, so the sign becomes the name of the act. The hand stays for Play: it is the game
+  with no question, only his hands, and he knows it already. A thin text `−` would look like a dash on the
+  button; the emoji signs are drawn heavy and match each other.
 - The name on the home screen stays "Learn to Add" for now.
 - About 250 new lines, and edits in about eight existing functions.
 
@@ -375,8 +375,8 @@ After watching him. In rough order of value. None of these is in the first versi
 0. Step zero. Its result decides the starting level, where "all gone" sits, and how early the lid comes.
 1. The scene and one sum: the deal, the question's arrival, the waiting places, the take-away taps and
    undo, the answer, the proof.
-2. The help, the read-back, the flip, stars, the ordered facts including all gone, the comeback of a sum
-   that needed numbers.
+2. The help, the read-back, stars, the ordered facts including all gone, the comeback of a sum that needed
+   numbers.
 3. The dial per game, what is remembered, the parent card in the README, and a re-test of addition.
 4. Watch him use it (list below), then adjust.
 5. "Next", one item at a time, each after watching.
@@ -392,8 +392,7 @@ After watching him. In rough order of value. None of these is in the first versi
 - Does he count what is left from 1, or say it straight away? For which facts?
 - Does he use the row of 5 (7−2 leaves the full row)? Or count from 1 every time?
 - Does he count back ("5... 4, 3")? That is the sign for the lid.
-- Does he say "because 3 and 2 make 5"? That is the sign that the flip has landed, and the sign for the
-  missing part.
+- Does he say "because 3 and 2 make 5"? That is the sign for the flip and the missing part.
 - Does a car ever leave when he only meant to count it? This is the biggest interaction risk in the
   design, and the first sessions are its test. The question waits while he touches, so it should be rare.
   If it keeps happening, the fallback is to tap a place instead of a car: a car then hops up from the
@@ -413,9 +412,9 @@ The open questions of the first draft, settled:
 
 1. **Zero** is in from the first version, as "all gone", with a `0` button on the take-away row.
 2. **He takes them away**, with the waiting places. To be revisited after watching him.
-3. **The icon** is ➖.
+3. **The icons** are ➕ and ➖, a pair. The hand stays for Play.
 4. **The name** stays "Learn to Add".
-5. **The flip** is in the first version, only after the second sum of an "other part" pair.
+5. **The flip** is not in the first version. It was built and taken out again as confusing; see "Next".
 6. **The notes** count the group a car joins: the places as he takes away, the tray as he puts one back.
    Nothing counts down until the lid.
 7. **All gone** appears twice in the first pass of Level A (3−3 early, 5−5 last), not four times.
