@@ -187,14 +187,10 @@ always comes first.
   the dial and a normal `3` chip in all three games; an old save; a phone in landscape with four buttons.
 - **Build order:** step zero; one sum; help, read-back, facts, saving; shared spots, re-test; watch him.
 
-## He earns the ✖️ button
+## The ✖️ button is always there
 
-- **The button is hidden until he wins a trophy while playing ➖**, at Level A or B. Then it pops in next
-  to ➖ with a ting. The stars are shared with ➕, so stars from ➕ count towards that trophy.
-- **It is not remembered.** When the app is opened again the button is hidden again, and one trophy in ➖
-  brings it back. His place in the eight facts is remembered as usual.
-- **For a look, or for testing:** open the page with `?unlock` at the end of the address and the button is
-  there from the start.
+- **✖️ is available from the start**, like ➕ and ➖. The first version hid it until he won a trophy in ➖;
+  that requirement was removed, and the `?unlock` address is no longer needed.
 
 ## Decided
 
@@ -202,6 +198,6 @@ always comes first.
 2. **`3 × 2` is read "3 groups of 2"**, the number of groups first, as in NCERT.
 3. **Food on the plates** (strawberries, oranges, apples), a new one after a trophy won in ✖️. His cars
    stay in the other games. No cookies: the chocolate chips on a cookie are a small group he could count.
-4. **✖️ is earned** with a trophy in ➖, and is not remembered between sessions.
+4. **✖️ is always available**, like ➕ and ➖ (at first it was earned with a trophy in ➖; that was dropped).
 5. Every other choice (the plate tap, no waiting places, the colours, one sentence, the help, the facts,
    the hidden dial) is explained once, in "Why this design" and "Which sums".

@@ -57,7 +57,6 @@
     transition: transform .15s, opacity .15s, background .15s;
   }
   .mode.on { background: #fff; opacity: 1; transform: scale(1.06); box-shadow: 0 0 0 calc(var(--u) * .06) #ffb74d, 0 calc(var(--u) * .06) 0 #0002; }
-  .mode.locked { display: none; }   /* ✖️ is earned: it appears after a trophy in take away */
 
   #stars { display: flex; gap: calc(var(--u) * .06); font-size: calc(var(--u) * .5); line-height: 1; }
   #stars span { filter: grayscale(1); opacity: .25; transition: filter .2s, opacity .2s; }
@@ -211,7 +210,7 @@
       <button class="mode" data-mode="play" aria-label="Play">✋</button>
       <button class="mode" data-mode="ask" aria-label="How many?">➕</button>
       <button class="mode" data-mode="take" aria-label="How many left?">➖</button>
-      <button class="mode locked" data-mode="mult" aria-label="How many altogether?">✖️</button>
+      <button class="mode" data-mode="mult" aria-label="How many altogether?">✖️</button>
     </div>
     <div id="meta">
       <div id="stars" aria-hidden="true"><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span></div>
@@ -1057,7 +1056,6 @@ async function takeEvaluate(n) {
     await trophy(); if (g !== gen) return;
     stars = 0; paintStars();
     setIdx = (setIdx + 1) % SETS.length;   // a new object as a treat, never inside one sum
-    await unlockMult(); if (g !== gen) return;
   }
   await sleep(150); if (g !== gen) return;
   takeDeal();
@@ -1227,20 +1225,6 @@ async function multClear() {
   mult.apples.forEach(a => anim(a.el, [{ transform: T(a.pos), opacity: 1 }, { transform: T(off(a.pos)), opacity: 0 }], opts));
   sfx.slide();
   await sleep(400);
-}
-
-// ✖️ is earned: the button is hidden until he wins a trophy in take away, at either level. It is not remembered, so it
-// is hidden again when the app is opened again. With ?unlock at the end of the address it is there from the start.
-let unlocked = /[?&]unlock\b/.test(location.search);
-const multButton = $('.mode[data-mode="mult"]');
-multButton.classList.toggle('locked', !unlocked);
-async function unlockMult() {
-  if (unlocked) return;
-  unlocked = true; multButton.classList.remove('locked');
-  await sleep(300);
-  sfx.sparkle();
-  anim(multButton, [{ transform: 'scale(0)', opacity: 1 }, { transform: 'scale(1.5)', opacity: 1, offset: .5 }, { transform: 'scale(1)', opacity: 1 }, { transform: 'scale(1.25)', opacity: 1 }, { transform: 'scale(1)', opacity: .6 }], { duration: 1400, easing: 'ease-in-out' });
-  await sleep(1400);
 }
 
 /* ==================== modes, the parent dial, taps ==================== */

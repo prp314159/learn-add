@@ -23,11 +23,6 @@ again. The thinking behind every choice is in [PLAN.md](PLAN.md),
   straight away and the app fills the plates for him. Totals up to 10, eight facts. The stars and the
   trophy are shared with the other two question games.
 
-**He earns the ✖️ button.** It is hidden until he wins a trophy while playing ➖, at either level. Then it
-pops in next to ➖. This is not remembered: when the app is opened again the button is hidden again, and
-one trophy in ➖ brings it back. To see ✖️ straight away, open the page with `?unlock` at the end of the
-address, for example `http://localhost:8137/?unlock`.
-
 The small round letter in the corner is the parent dial. **Press and hold it** for a second to switch
 between Level A (up to 5) and Level B (6 to 10). Each question game has its own level, and the dial shows
 and changes the level of the game he is in (in Play, the addition level). ✖️ has one level for now, so
