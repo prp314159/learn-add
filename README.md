@@ -2,10 +2,11 @@
 
 A one-page app that teaches a 5 year old what addition *is*: putting two groups together and finding out
 how many there are now. A third game teaches what subtraction is: taking some away and finding out how
-many are left. The thinking behind every choice is in [PLAN.md](PLAN.md) and
-[PLAN-SUBTRACTION.md](PLAN-SUBTRACTION.md).
+many are left. A fourth game is a gentle first meeting with multiplication: the same group, again and
+again. The thinking behind every choice is in [PLAN.md](PLAN.md),
+[PLAN-SUBTRACTION.md](PLAN-SUBTRACTION.md) and [PLAN-MULTIPLICATION.md](PLAN-MULTIPLICATION.md).
 
-## The three games
+## The four games
 
 - ✋ **Play:** no questions. Tap a box and one object hops onto the tray. Tap an object on the tray and it
   hops off again. The number sentence above the tray changes live. A full row of 5 sparkles, a full tray
@@ -17,11 +18,20 @@ many are left. The thinking behind every choice is in [PLAN.md](PLAN.md) and
   under the `2`. He taps objects on the tray and they hop up into the places, faded; a tap on a gone one
   brings it back. Then he taps how many are left, or answers straight away and the app moves the group for
   him. `0` is on the row: 5 take away 5 leaves none. The stars and the trophy are shared with "How many?".
+- ✖️ **How many altogether?:** `3 × 2 = ?` arrives with three empty plates. He taps a plate and a whole
+  group of 2 drops onto it: one tap is one group. Then he taps how many there are altogether, or answers
+  straight away and the app fills the plates for him. Totals up to 10, eight facts. The stars and the
+  trophy are shared with the other two question games.
+
+**He earns the ✖️ button.** It is hidden until he wins a trophy while playing ➖, at either level. Then it
+pops in next to ➖. This is not remembered: when the app is opened again the button is hidden again, and
+one trophy in ➖ brings it back. To see ✖️ straight away, open the page with `?unlock` at the end of the
+address, for example `http://localhost:8137/?unlock`.
 
 The small round letter in the corner is the parent dial. **Press and hold it** for a second to switch
 between Level A (up to 5) and Level B (6 to 10). Each question game has its own level, and the dial shows
-and changes the level of the game he is in (in Play, the addition level). The app remembers the levels and
-his place in the sums of each game.
+and changes the level of the game he is in (in Play, the addition level). ✖️ has one level for now, so
+the dial is hidden there. The app remembers the levels and his place in the sums of each game.
 
 ## Parent card
 
@@ -48,17 +58,34 @@ For "How many left?":
 - Away from the iPad, tiny stories of leaving and eating: "you have 5 grapes and you eat 2", "5 birds on
   the wire, 2 fly away", and "you eat all 3, how many are left? None!"
 
+For "How many altogether?" (the number of plates always comes first):
+
+- When the numbers pulse after a right answer, say it on the three beats: **"3 plates. 2 on each. 6
+  strawberries."** Now and then: "2 and 2 and 2 make 6."
+- Before he answers, ask **"how many plates? how many on each?"** After a sum, ask **"what if one more
+  plate came?"**
+- When he answers those two questions without a slip: **"3 groups of 2 make 6."** Point at the `×`: "this
+  sign says groups of".
+- When he answers a shuffled sum before tapping a plate: "3 twos are 6." Weeks later, the school word:
+  "you tapped 3 times. 3 times 2 is 6."
+- Never "3 plus 2", "times makes it bigger" or "tables".
+- If 2 × 3 comes right after 3 × 2 and he says "the same!", ask **"is it the same picture?"**
+- Away from the iPad: socks in pairs, wheels on cars, legs on chairs, fingers on hands, each with "how
+  many on each?".
+
 Before the first session, and again after two or three weeks, do the five-minute check with real blocks
-and cups from "Step zero" in the plan. What he does differently is the only real evidence that the app
-taught him anything.
+and cups (or plates) from "Step zero" in the plan of that game. What he does differently is the only real
+evidence that the app taught him anything.
 
 ## What to watch for
 
-The lists are at the end of [PLAN.md](PLAN.md) and [PLAN-SUBTRACTION.md](PLAN-SUBTRACTION.md). The most
-useful ones at the start: does he count aloud or tap and guess, does he answer before moving anything, and
-does he touch the objects on the tray to count them? In "How many left?": does he answer with the number
-taken away, does he stop by himself or only when the places are full, and does a car ever leave when he
-only meant to count it?
+The lists are in [PLAN.md](PLAN.md), [PLAN-SUBTRACTION.md](PLAN-SUBTRACTION.md) and
+[PLAN-MULTIPLICATION.md](PLAN-MULTIPLICATION.md). The most useful ones at the start: does he count aloud
+or tap and guess, does he answer before moving anything, and does he touch the objects on the tray to
+count them? In "How many left?": does he answer with the number taken away, does he stop by himself or
+only when the places are full, and does a car ever leave when he only meant to count it? In "How many
+altogether?": does he answer 5 for `3 × 2` (he read the `×` as `+`), does he mix up the plates and how
+many on each, and does he count by ones or say "2, 4, 6"?
 
 ## Number words in your own voice (optional)
 
@@ -75,6 +102,10 @@ behind `const VOICE = false;` in `index.html`, with no setting on the screen.
 
 The objects are emoji pairs at the top of the script in `index.html` (`SETS`). Put what he loves first.
 A new pair comes after every trophy. Keep the pairs red and blue or red and yellow, never red and green.
+
+The food on the plates of ✖️ is the list right below it (`FOODS`): strawberries, oranges, apples, one
+kind and one colour at a time. A new food comes after a trophy won in ✖️. Pick food with no parts he
+could count: a cookie has chocolate chips, cherries come as a pair, grapes as a bunch.
 
 ## Running it
 

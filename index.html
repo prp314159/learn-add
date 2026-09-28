@@ -57,6 +57,7 @@
     transition: transform .15s, opacity .15s, background .15s;
   }
   .mode.on { background: #fff; opacity: 1; transform: scale(1.06); box-shadow: 0 0 0 calc(var(--u) * .06) #ffb74d, 0 calc(var(--u) * .06) 0 #0002; }
+  .mode.locked { display: none; }   /* ✖️ is earned: it appears after a trophy in take away */
 
   #stars { display: flex; gap: calc(var(--u) * .06); font-size: calc(var(--u) * .5); line-height: 1; }
   #stars span { filter: grayscale(1); opacity: .25; transition: filter .2s, opacity .2s; }
@@ -92,6 +93,13 @@
   .chip.gone { opacity: .55; }   /* take away: the number of the gone cars is faded, like them */
   .sign { font-size: calc(var(--u) * .7); font-weight: 800; color: #8a7760; line-height: 1; }
   .hide { visibility: hidden; }
+  /* Groups of: the sentence is centred over the plates, and the tray and the two zones keep their room but are not seen */
+  body.mult #sentence { display: flex; justify-content: center; gap: calc(var(--u) * .3); }
+  body.mult #zones, body.mult #tray { visibility: hidden; }
+  /* The number of plates has no chip behind it: a round white 3 beside three plates would look like a fourth */
+  .chip.bare { background: transparent; box-shadow: none; }
+  /* The × is drawn smaller than the + in most fonts. A little bigger, it looks as heavy. Same ink, and it never turns. */
+  body.mult #op { font-size: calc(var(--u) * .84); }
   .zone { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
 
   /* A supply is a closed box with one object peeking out. It must never look like a group he could count. */
@@ -162,6 +170,19 @@
     margin: calc(var(--a) / -2) 0 0 calc(var(--a) / -2); border-radius: 50%;
     border: calc(var(--u) * .06) dashed #c4b195; pointer-events: none; will-change: transform;
   }
+  /* groups of: a plate is one group. White, a cream rim, a soft shadow. He taps the plate itself. */
+  .plate {
+    position: absolute; left: 0; top: 0; width: var(--p); height: var(--p);
+    margin: calc(var(--p) / -2) 0 0 calc(var(--p) / -2);
+    pointer-events: auto; will-change: transform;
+  }
+  .plate .dish {
+    display: block; width: 100%; height: 100%; border-radius: 50%; background: #fff;
+    box-shadow: inset 0 0 0 calc(var(--u) * .09) #fff, inset 0 0 0 calc(var(--u) * .14) #f1e2c6,
+                0 calc(var(--u) * .07) 0 #e3d2b3, 0 calc(var(--u) * .16) calc(var(--u) * .25) #0002;
+  }
+  .plate .dish.glow { animation: dish .9s ease-out; }
+  @keyframes dish { 0% { background: #fff8d6; box-shadow: 0 0 calc(var(--u) * .6) #ffd54f; } }
   #big {
     position: absolute; left: 0; top: 0; width: calc(var(--u) * 2.6); height: calc(var(--u) * 2.6); margin: calc(var(--u) * -1.3) 0 0 calc(var(--u) * -1.3);
     border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none;
@@ -190,6 +211,7 @@
       <button class="mode" data-mode="play" aria-label="Play">✋</button>
       <button class="mode" data-mode="ask" aria-label="How many?">➕</button>
       <button class="mode" data-mode="take" aria-label="How many left?">➖</button>
+      <button class="mode locked" data-mode="mult" aria-label="How many altogether?">✖️</button>
     </div>
     <div id="meta">
       <div id="stars" aria-hidden="true"><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span></div>
@@ -229,8 +251,16 @@ const SETS = [
   { e: ['📕', '📘'], bg: ['#e53935', '#1e88e5'], fg: ['#fff', '#fff'] },
   { e: ['🔴', '🟡'], bg: ['#e53935', '#fbc02d'], fg: ['#fff', '#4a3500'] },
 ];
-let setIdx = 0;
-const set = () => SETS[setIdx];
+// Groups of: food on plates, one kind and one colour. The same shape as a set above, so the objects and the chips
+// read it the same way. A new food comes after a trophy won in that game.
+// A food must have no parts he could count: no cookie (its chocolate chips), no cherries (a pair), no grapes.
+const FOODS = [
+  { e: ['🍓'], bg: ['#e53935'], fg: ['#fff'] },
+  { e: ['🍊'], bg: ['#f57c00'], fg: ['#fff'] },
+  { e: ['🍏'], bg: ['#43a047'], fg: ['#fff'] },
+];
+let setIdx = 0, foodIdx = 0;
+const set = () => mode === 'mult' ? FOODS[foodIdx] : SETS[setIdx];
 
 /* ---------- which sums, in what order ---------- */
 const one = (a, b) => [{ a, b, c1: 0, c2: 1 }];
@@ -262,6 +292,12 @@ const PASS = {
         away(6, 3), away(8, 4), other(7, 3),                                // halves and near halves
         other(10, 1), other(10, 2), other(10, 3), other(10, 4), away(10, 10)],   // from ten: the tens pairs undone, then all gone
   },
+  // Groups of: a plates, b on each. Never 2 × 2 first: with equal numbers nothing shows which one counts the plates.
+  mult: {
+    A: [one(3, 2), one(4, 2), one(5, 2),                 // more plates: only the plates change, and each answer is 2 more
+        one(2, 2), one(2, 3), one(2, 4), one(2, 5),      // two plates, more on each: the doubles he knows
+        one(3, 3)],
+  },
 };
 function poolAdd(level) {
   const out = [];
@@ -277,6 +313,12 @@ function poolTake(level) {
   for (let w = level === 'A' ? 2 : 6; w <= (level === 'A' ? 5 : 10); w++) for (let t = 1; t <= w; t++) out.push({ w, t });
   return out;
 }
+// Every fact with a total up to 10, at least two plates and at least two on each: eight of them.
+function poolMult() {
+  const out = [];
+  for (let a = 2; a <= 5; a++) for (let b = 2; b <= 5; b++) if (a * b <= 10) out.push({ a, b, c1: 0, c2: 1 });
+  return out;
+}
 function shuffle(arr) {
   for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
   return arr;
@@ -285,12 +327,12 @@ function shuffle(arr) {
 /* ---------- what is remembered: his place in the sums and the parent dial, per game ---------- */
 const KEY = 'learn-add-v1';
 const store = (() => {
-  const s = { add: { level: 'A', pos: { A: 0, B: 0 } }, take: { level: 'A', pos: { A: 0, B: 0 } } };
+  const s = { add: { level: 'A', pos: { A: 0, B: 0 } }, take: { level: 'A', pos: { A: 0, B: 0 } }, mult: { level: 'A', pos: { A: 0, B: 0 } } };
   try {
     const j = JSON.parse(localStorage.getItem(KEY));
     if (j) {
       // the first version saved one level and one place: they were the addition's
-      const parts = { add: j.add || (j.level ? { level: j.level, pos: j.pos } : null), take: j.take };
+      const parts = { add: j.add || (j.level ? { level: j.level, pos: j.pos } : null), take: j.take, mult: j.mult };
       for (const k in parts) {
         const v = parts[k]; if (!v) continue;
         if (v.level === 'B') s[k].level = 'B';
@@ -302,12 +344,15 @@ const store = (() => {
 })();
 function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
 
-// The two question games, each with its own facts, its own place in them, its own level on the dial, and its own
+// The question games, each with its own facts, its own place in them, its own level on the dial, and its own
 // sequence state (the place in a pair, the comebacks, the shuffle bag), so nothing is lost when he switches games.
+// Groups of has one level for now, and its partner is the fact itself: a turn-around is never forced straight after
+// its partner, because plates cannot show why the totals match and he would answer from memory.
 const newSeq = () => ({ sub: 0, last: null, forced: null, bag: [], comeback: [], fromPass: false });
 const games = {
   ask:  { mem: store.add,  PASS: PASS.add,  pool: poolAdd,  seq: newSeq(), partner: s => ({ a: s.b, b: s.a, c1: 1, c2: 0 }) },
   take: { mem: store.take, PASS: PASS.take, pool: poolTake, seq: newSeq(), partner: s => ({ w: s.w, t: s.w - s.t }) },
+  mult: { mem: store.mult, PASS: PASS.mult, pool: poolMult, seq: newSeq(), partner: s => s },
 };
 const sameSum = (s, t) => s.a === t.a && s.b === t.b && s.w === t.w && s.t === t.t;
 function resetSeq(g) { Object.assign(g.seq, newSeq(), { last: g.seq.last }); }
@@ -382,6 +427,20 @@ const sfx = {
   fanfare() { [392, 523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(f, { t: i * .12, dur: i === 4 ? 1 : .3, vol: .4 })); },
   tumble()  { [10, 8, 6, 4, 2].forEach((n, i) => tone(freq(n), { t: i * .07, dur: .25, vol: .3 })); },
   tok()     { tone(140, { dur: .12, type: 'sine', vol: .4 }); },
+  // Groups of. A plate sound is a plate, a note is an object. The plate has its own sound, lower than the tok of the
+  // mode buttons, so a tap on ✖️ and three plates never sound like four of anything.
+  plate()   { tone(118, { dur: .18, type: 'triangle', vol: .5, to: 88 }); },
+  soft(n)   { tone(freq(n), { dur: .4, vol: .26 }); },
+  // A group lands: a quick ripple up the running count, the last note full. Over three taps he hears 2, 4, 6.
+  ripple(from, to) {
+    for (let n = from; n <= to; n++) {
+      const t = (n - from) * .08, last = n === to;
+      tone(freq(n), { t, dur: last ? .55 : .2, vol: last ? .5 : .2 });
+      if (last) tone(freq(n) * 2, { t, dur: .3, vol: .1, type: 'sine' });
+    }
+  },
+  // The read-back: every plate plays the same short figure, so he hears the same 2 again: 2, and 2, and 2.
+  figure(b, quiet) { const k = quiet ? .4 : 1; for (let n = 1; n <= b; n++) tone(freq(n) * 2, { t: (n - 1) * .06, dur: n === b ? .3 : .14, vol: (n === b ? .32 : .2) * k }); },
   // quiet = the voice is speaking over it
   read(i, quiet) { const k = quiet ? .4 : 1; tone([523.25, 659.25, 783.99][i], { dur: .6, vol: .35 * k }); if (i === 2) tone(1046.5, { t: .05, dur: .8, vol: .25 * k }); },
 };
@@ -469,6 +528,7 @@ function fit() {
   document.documentElement.style.setProperty('--u', U + 'px');
   apples.forEach(a => setPos(a, where(a), 0));
   take.places.forEach((p, i) => { p.style.transform = T(placePos(i)); });
+  mult.plates.forEach(p => { p.el.style.transform = T(plateAt(p.i)); });
 }
 function rectIn(el) {
   const r = el.getBoundingClientRect(), L = layer.getBoundingClientRect();
@@ -482,10 +542,33 @@ function homePos(zone, n, i) {
   if (n <= 5) return { x: c.x + (i - (n - 1) / 2) * p, y: c.y, s: .82 };
   return { x: c.x + ((i % 5) - 2) * p, y: c.y + (i < 5 ? -.5 : .5) * p, s: .82 };
 }
+// Groups of: one centred row of plates, low in the room that the zones and the tray share, so the big numeral fits
+// above the row and the sentence and the number row never move. All the plates of a sum are one size.
+const plateSize = b => b <= 2 ? 2 : 2.6;
+const band = () => { const z = rectIn($('#zones')), t = rectIn($('#trayWrap')); return { x: z.x + z.w / 2, top: z.y, bottom: t.y + t.h }; };
+function plateAt(i) {
+  const { a, b } = mult.sum, c = band(), pitch = plateSize(b) + (b <= 2 ? .25 : .5);
+  return { x: c.x + (i - (a - 1) / 2) * pitch * U, y: c.bottom - U * 1.45, s: 1 };
+}
+const overPlates = () => { const c = band(); return { x: c.x, y: c.top + U * .95 }; };
+// Dice shapes, always the same way up: 2 one above the other, 3 a triangle, 4 a square, 5 a square with one in the
+// middle. A group is seen as one thing at a glance, and an upright pair keeps 5 × 2 from being a line of ten above
+// the ten buttons.
+const DICE = {
+  2: [[0, -.45], [0, .45]],
+  3: [[0, -.5], [-.5, .4], [.5, .4]],
+  4: [[-.46, -.46], [.46, -.46], [-.46, .46], [.46, .46]],
+  5: [[-.56, -.56], [.56, -.56], [0, 0], [-.56, .56], [.56, .56]],
+};
+function onPlate(i, k) {
+  const c = plateAt(i), b = mult.sum.b, [dx, dy] = DICE[b][k];
+  return { x: c.x + dx * U, y: c.y + dy * U, s: b <= 2 ? .9 : b === 5 ? .74 : .84 };
+}
 function where(a) {
   if (a.at.t === 'tray') return trayPos(a.at.slot);
   if (a.at.t === 'home' || a.at.t === 'queued') return homePos(a.zone, a.n, a.i);
   if (a.at.t === 'place') return placePos(a.at.i);
+  if (a.at.t === 'plate') return onPlate(a.at.p, a.at.k);
   return a.pos;
 }
 function buildTray(rows) {
@@ -537,10 +620,12 @@ function showNum(a, n, ms) {
   a.num.textContent = n;
   anim(a.num, [{ opacity: 0, transform: 'scale(.4)' }, { opacity: 1, transform: 'scale(1.1)', offset: .2 }, { opacity: 1, transform: 'scale(1)', offset: .7 }, { opacity: 0, transform: 'scale(1)' }], { duration: ms });
 }
-// The last number means all of them: one big numeral over the whole tray.
-async function showBig(n) {
-  const big = $('#big'), c = centre(tray);
+// The last number means all of them: one big numeral over the whole tray. In groups of it is a little smaller and
+// sits above the row of plates: on the middle plate it would look like that plate's own number.
+async function showBig(n, c = centre(tray), size = 2.6) {
+  const big = $('#big'), d = size * U;
   big.textContent = n; big.style.left = c.x + 'px'; big.style.top = c.y + 'px';
+  big.style.width = big.style.height = d + 'px'; big.style.margin = `${-d / 2}px 0 0 ${-d / 2}px`; big.style.fontSize = d * .73 + 'px';
   anim(big, [{ opacity: 0, transform: 'scale(.3)' }, { opacity: 1, transform: 'scale(1.1)', offset: .15 }, { opacity: 1, transform: 'scale(1)', offset: .25 }, { opacity: 1, transform: 'scale(1)', offset: .8 }, { opacity: 0, transform: 'scale(1)' }], { duration: 1600 });
   await sleep(1600);
 }
@@ -575,7 +660,7 @@ function enqueue(fn) {
   const q = Q, g = gen; q.pending++;
   q.chain = q.chain.then(async () => { if (g === gen) await fn(); })
     .catch(e => console.error(e))
-    .then(() => { q.pending--; if (q === Q && q.pending === 0) { if (mode === 'ask') askIdle(); else if (mode === 'take') takeIdle(); } });
+    .then(() => { q.pending--; if (q === Q && q.pending === 0) { if (mode === 'ask') askIdle(); else if (mode === 'take') takeIdle(); else if (mode === 'mult') multIdle(); } });
 }
 
 /* ---------- the sentence ---------- */
@@ -723,12 +808,14 @@ async function askIdle() {
   if (ask.pending != null && !ask.busy) { const n = ask.pending; ask.pending = null; evaluate(n); }
 }
 
-// He may answer at any moment, even before moving a single object. In take away, once the question has arrived.
+// The state of the question game he is in.
+const game = () => mode === 'take' ? take : mode === 'mult' ? mult : ask;
+// He may answer at any moment, even before moving a single object. In take away and in groups of, once the question has arrived.
 function answer(n) {
-  const st = mode === 'take' ? take : ask;
-  if (st.busy || (st === take && !take.asked)) return;
+  const st = game();
+  if (st.busy || (st !== ask && !st.asked)) return;
   if (Q.pending > 0 || st.tidying) { st.pending = n; return; }
-  if (st === take) takeEvaluate(n); else evaluate(n);
+  if (st === take) takeEvaluate(n); else if (st === mult) multEvaluate(n); else evaluate(n);
 }
 
 async function evaluate(n) {
@@ -767,24 +854,30 @@ async function evaluate(n) {
 
 // About one object per second up to 5, quicker for bigger totals, never more than about 6 seconds in all.
 // row is what gets counted: everything in addition, what is left on the tray in take away.
-async function recount(g, row, withNumbers) {
-  const step = Math.min(1000, 6000 / row.length);
+// Groups of counts by ones too, but plate by plate: per objects, then a short pause, and the last of each plate
+// stressed (1 2 · 3 4 · 5 6). The pauses are part of the 6 seconds. big shows the big numeral in its own place.
+async function recount(g, row, withNumbers, { per = 0, gap = 0, big = showBig } = {}) {
+  const pauses = per ? (row.length / per - 1) * gap : 0;
+  const step = Math.min(1000, (6000 - pauses) / row.length);
   await sleep(250);
   for (let i = 0; i < row.length; i++) {
     if (g !== gen) return;
-    bounce(row[i], step * .7); sfx.note(i + 1);
+    const last = per && (i + 1) % per === 0;
+    bounce(row[i], step * .7); if (per && !last) sfx.soft(i + 1); else sfx.note(i + 1);
     let said = null;
     if (withNumbers) { showNum(row[i], i + 1, Math.max(650, step * .95)); said = sayNumber(i + 1); }
     await Promise.all([sleep(step), said]);   // the count never runs ahead of the voice
+    if (last && i < row.length - 1) await sleep(gap);
   }
   // The last number is said once more with the big numeral: it is how many there are, not the name of the last one.
-  if (withNumbers && g === gen) { if (VOICE) sayNumber(row.length); await showBig(row.length); }
+  if (withNumbers && g === gen) { if (VOICE) sayNumber(row.length); await big(row.length); }
 }
 
 // The one place where the symbols get tied to the things, so it happens every time.
 // It is also where the words come in. The sentence is said in one breath, and each beat starts as the
 // voice gets to its part, so every word lands with its numeral and its group.
 // Each beat pulses a numeral with its group. bright: faded cars that brighten for the beat. also: anything else the beat shows.
+// sound: the beat's own sound. Without one, the beats play the three notes of the chord, one each.
 const askBeats = () => [
   { chip: chips.n1,    group: ask.apples.filter(a => a.group === 1), k: 1.35, ms: 600, text: WORDS[ask.sum.a] },
   { chip: chips.n2,    group: ask.apples.filter(a => a.group === 2), k: 1.35, ms: 600, text: `${SAYING.and} ${WORDS[ask.sum.b]}` },
@@ -797,7 +890,9 @@ async function readBack(g, beats) {
     const b = beats[i], ms = b.ms + slow;
     if (i) await voice.reach[i];   // the first beat does not wait: a voice that fails to start must not leave a hole
     if (g !== gen) return;
-    pulse(b.chip, b.k, ms); b.group.forEach(a => pulse(a.face, 1.25, ms)); sfx.read(i, talk);
+    if (b.chip) pulse(b.chip, b.k, ms);
+    (b.group || []).forEach(a => pulse(a.face, 1.25, ms));
+    if (b.sound) b.sound(talk); else sfx.read(i, talk);
     (b.bright || []).forEach(a => anim(a.el, [{ opacity: .55 }, { opacity: 1 }, { opacity: .55 }], { duration: ms }));
     if (b.also) b.also();
     await sleep(i === beats.length - 1 ? ms + 50 : ms); if (g !== gen) return;
@@ -962,6 +1057,7 @@ async function takeEvaluate(n) {
     await trophy(); if (g !== gen) return;
     stars = 0; paintStars();
     setIdx = (setIdx + 1) % SETS.length;   // a new object as a treat, never inside one sum
+    await unlockMult(); if (g !== gen) return;
   }
   await sleep(150); if (g !== gen) return;
   takeDeal();
@@ -986,25 +1082,194 @@ function takeBeats() {
     { chip: chips.total, group: on,                        k: 1.5,  ms: 700, text: `leaves ${WORDS[left]}`, also: left ? null : () => glowCells(0, take.whole) },
   ];
 }
+/* ==================== ✖️ How many altogether? ==================== */
+// The same group, again and again. He taps an empty plate and a whole group lands on it: one tap is one group, where
+// in adding one tap was one car. In 3 × 2 the 3 counts plates and the 2 counts what is on each plate.
+const mult = { sum: null, plates: [], apples: [], total: 0, asked: false, misses: 0, busy: false, pending: null, run: 0, runTimer: 0 };
+const landed = () => mult.plates.filter(p => p.state === 'full').length * mult.sum.b;
+const dishAnim = (p, frames, ms) => anim(p.dish, frames, { duration: ms, easing: 'ease-out' });
+const glowPlates = () => mult.plates.forEach(p => { p.dish.classList.remove('glow'); void p.dish.offsetWidth; p.dish.classList.add('glow'); });
+function clearPlates() { mult.plates.forEach(p => p.el.remove()); mult.plates = []; mult.apples = []; }
+
+// The question: 3 × 2 = ? pops in. Half a second later the 3 pulses and three empty plates pop in, a plate sound each.
+// Both numbers are amounts he can see: the plates now, and the 2 with every group that lands.
+function multDeal() {
+  const s = nextSum(games.mult);
+  clearApples(); clearPlates();
+  Object.assign(mult, { sum: s, total: s.a * s.b, asked: false, misses: 0, busy: false, pending: null, run: 0 });
+  const all = [chips.n1, chips.op, chips.n2, chips.eq, chips.total];
+  all.forEach(el => el.classList.remove('hide'));
+  chips.n1.textContent = s.a; plainChip(chips.n1, false); chips.n1.classList.add('bare');
+  chips.n2.textContent = s.b; paintChip(chips.n2, 0);
+  chips.total.textContent = '?'; plainChip(chips.total, true);
+  chips.total.style.color = chips.total.style.borderColor = set().bg[0];   // the ? wears the food's colour, like the 2 and the answer
+  all.forEach(popChip);
+  numrow.classList.add('inert');
+  numrow.querySelectorAll('button').forEach(b => b.classList.remove('good', 'soft'));
+  enqueue(async () => {
+    const g = gen;
+    await sleep(500); if (g !== gen) return;
+    pulse(chips.n1, 1.35, 200 * s.a + 200);
+    for (let i = 0; i < s.a; i++) {
+      const el = document.createElement('div'), dish = document.createElement('span');
+      el.className = 'plate'; dish.className = 'dish'; el.appendChild(dish);
+      el.style.setProperty('--p', `calc(var(--u) * ${plateSize(s.b)})`);
+      const p = { el, dish, i, state: 'empty', apples: [] };
+      el._p = p; mult.plates.push(p);
+      el.style.transform = T(plateAt(i));
+      layer.insertBefore(el, layer.firstChild);   // under everything that lies or lands on it
+      dishAnim(p, [{ transform: 'scale(0)' }, { transform: 'scale(1.12)' }, { transform: 'scale(1)' }], 300);
+      sfx.plate();
+      await sleep(200); if (g !== gen) return;
+    }
+    mult.asked = true; numrow.classList.remove('inert');
+  });
+}
+
+// A whole group drops onto its plate from just above, all together, and the plate dips a little under it.
+function dropGroup(p, ms) {
+  const b = mult.sum.b, made = [];
+  for (let k = 0; k < b; k++) {
+    const a = makeApple(0); a.at = { t: 'plate', p: p.i, k };
+    const to = onPlate(p.i, k), from = { x: to.x, y: to.y - U * 1.3, s: to.s };
+    setPos(a, to, 0);
+    anim(a.el, [{ transform: T(from), opacity: 0 }, { transform: T({ ...to, y: lerp(from.y, to.y, .35) }), opacity: 1, offset: .35 }, { transform: T(to), opacity: 1 }], { duration: ms, easing: 'ease-in' });
+    made.push(a);
+  }
+  p.apples = made; p.state = 'full';
+  mult.apples = mult.plates.flatMap(q => q.apples);   // plate by plate, the order they are counted in
+  return sleep(ms).then(() => {
+    made.forEach(squash);
+    dishAnim(p, [{ transform: 'translateY(0)' }, { transform: 'translateY(5%) scale(1.03, .97)' }, { transform: 'translateY(0)' }], 240);
+  });
+}
+
+// One tap, one group. An empty plate fills, in any order. A plate that is full, or already waiting for its group,
+// only wobbles: one group per plate, however fast he taps.
+function multTapPlate(p) {
+  if (mult.busy) return;
+  if (p.state !== 'empty') { dishAnim(p, [{ transform: 'rotate(0)' }, { transform: 'rotate(-7deg)' }, { transform: 'rotate(6deg)' }, { transform: 'rotate(-3deg)' }, { transform: 'rotate(0)' }], 320); return; }
+  p.state = 'waiting';
+  enqueue(async () => {
+    const before = landed();
+    await dropGroup(p, 300);
+    pulse(chips.n2, 1.3, 350);                              // the 2 and "those two" meet again with every landing
+    sfx.ripple(before + 1, before + mult.sum.b);            // the running count, the last note full: 2, 4, 6
+  });
+}
+// Touching is counting, as in the other games: a wiggle and the next note up, no number.
+function multTapApple(a) { if (!mult.busy && a.at.t === 'plate') touchCount(mult, a); }
+
+// The proof: the plates that are still empty get their groups all at once, with one slide sound.
+async function multProof() {
+  const empty = mult.plates.filter(p => p.state === 'empty');
+  if (!empty.length) return;
+  sfx.slide();
+  await Promise.all(empty.map(p => dropGroup(p, 380)));
+  await sleep(150);
+}
+function multIdle() {
+  if (mult.pending != null && !mult.busy) { const n = mult.pending; mult.pending = null; multEvaluate(n); }
+}
+
+async function multEvaluate(n) {
+  const g = gen, btn = numrow.querySelector(`button[data-n="${n}"]`);
+  mult.busy = true; mult.pending = null; numrow.classList.add('inert');
+  clearTimeout(mult.runTimer); mult.run = 0;
+
+  if (n !== mult.total) {
+    // A miss: no buzzer, no red cross. The empty plates fill, then everything is counted by ones, plate by plate,
+    // with numbers from the second miss on. Then every plate glows and the big numeral sits above the row.
+    mult.misses++;
+    sfx.boop(); btn.classList.remove('soft'); void btn.offsetWidth; btn.classList.add('soft');
+    await sleep(350); if (g !== gen) return;
+    await multProof(); if (g !== gen) return;
+    await recount(g, mult.apples, mult.misses >= 2, { per: mult.sum.b, gap: 330, big: k => { glowPlates(); return showBig(k, overPlates(), 1.8); } });
+    if (g !== gen) return;
+    mult.busy = false; numrow.classList.remove('inert');
+    return;
+  }
+
+  sfx.chord(); btn.classList.add('good');
+  chips.total.textContent = mult.total; paintChip(chips.total, 0); pulse(chips.total, 1.3, 350);
+  await multProof(); if (g !== gen) return;
+  await readBack(g, multBeats()); if (g !== gen) return;
+  await giveStar(g); if (g !== gen) return;
+  sumSolved(games.mult, mult.misses >= 2);
+  if (stars >= 5) {
+    await trophy(); if (g !== gen) return;
+    stars = 0; paintStars();
+    foodIdx = (foodIdx + 1) % FOODS.length;   // a new food as a treat, never inside one sum
+  }
+  await multClear(); if (g !== gen) return;
+  multDeal();
+}
+// The read-back: the 3 pulses while the plates pulse one after another, a plate sound each. Then plate by plate its
+// food bounces together and the 2 pulses with it, every plate playing the same short figure: 2, and 2, and 2. This
+// is where the repeated addition lives: it is never written on the screen. Then the 6 pulses with all of it.
+function multBeats() {
+  const { a, b } = mult.sum, q = a >= 4 ? .75 : 1, tick = 250 * q, each = 400 * q, beats = [];   // a quarter shorter with 4 or 5 plates
+  mult.plates.forEach((p, i) => beats.push({
+    ms: tick, text: i ? '' : WORDS[a], sound: () => sfx.plate(),
+    also: () => { if (!i) pulse(chips.n1, 1.35, tick * a); dishAnim(p, [{ transform: 'scale(1)' }, { transform: 'scale(1.1)' }, { transform: 'scale(1)' }], tick); },
+  }));
+  mult.plates.forEach((p, i) => beats.push({
+    chip: chips.n2, k: 1.3, ms: each, text: i ? '' : `groups of ${WORDS[b]}`, sound: quiet => sfx.figure(b, quiet),
+    also: () => p.apples.forEach(x => bounce(x, each * .85)),
+  }));
+  beats.push({ chip: chips.total, group: mult.apples, k: 1.5, ms: 700, text: `${SAYING.make} ${WORDS[mult.total]}`, sound: quiet => sfx.read(2, quiet) });
+  return beats;
+}
+// The plates slide off like a cleared table, with everything on them.
+async function multClear() {
+  const off = p => ({ ...p, x: p.x + U * 13 }), opts = { duration: 380, easing: 'ease-in', fill: 'forwards' };
+  mult.plates.forEach(p => { const at = plateAt(p.i); anim(p.el, [{ transform: T(at), opacity: 1 }, { transform: T(off(at)), opacity: 0 }], opts); });
+  mult.apples.forEach(a => anim(a.el, [{ transform: T(a.pos), opacity: 1 }, { transform: T(off(a.pos)), opacity: 0 }], opts));
+  sfx.slide();
+  await sleep(400);
+}
+
+// ✖️ is earned: the button is hidden until he wins a trophy in take away, at either level. It is not remembered, so it
+// is hidden again when the app is opened again. With ?unlock at the end of the address it is there from the start.
+let unlocked = /[?&]unlock\b/.test(location.search);
+const multButton = $('.mode[data-mode="mult"]');
+multButton.classList.toggle('locked', !unlocked);
+async function unlockMult() {
+  if (unlocked) return;
+  unlocked = true; multButton.classList.remove('locked');
+  await sleep(300);
+  sfx.sparkle();
+  anim(multButton, [{ transform: 'scale(0)', opacity: 1 }, { transform: 'scale(1.5)', opacity: 1, offset: .5 }, { transform: 'scale(1)', opacity: 1 }, { transform: 'scale(1.25)', opacity: 1 }, { transform: 'scale(1)', opacity: .6 }], { duration: 1400, easing: 'ease-in-out' });
+  await sleep(1400);
+}
+
 /* ==================== modes, the parent dial, taps ==================== */
 function setMode(m) {
-  mode = m; newGen(); clearApples(); clearPlaces(); hideHand();
-  clearTimeout(ask.runTimer); clearTimeout(take.runTimer); clearTimeout(take.askTimer);
+  mode = m; newGen(); clearApples(); clearPlaces(); clearPlates(); hideHand();
+  clearTimeout(ask.runTimer); clearTimeout(take.runTimer); clearTimeout(take.askTimer); clearTimeout(mult.runTimer);
   document.querySelectorAll('.mode').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
   $('#zone1').innerHTML = ''; $('#zone2').innerHTML = '';
-  const isPlay = m === 'play', isTake = m === 'take', mem = (isTake ? games.take : games.ask).mem;
+  const isPlay = m === 'play', isTake = m === 'take', isMult = m === 'mult', mem = (games[m] || games.ask).mem;
   document.body.classList.toggle('play', isPlay);
+  document.body.classList.toggle('mult', isMult);
   $('#stars').classList.toggle('hide', isPlay);
+  $('#dial').classList.toggle('hide', isMult);   // groups of has one level for now, and a dial that does nothing is one more thing to wonder about
   $('#tumble').classList.toggle('hide', !isPlay);
   numrow.classList.toggle('hide', isPlay);
-  chips.op.textContent = isTake ? '−' : '+';
+  chips.op.textContent = isTake ? '−' : isMult ? '×' : '+';
   chips.n2.classList.remove('gone');
+  chips.n1.classList.remove('bare'); chips.total.style.borderColor = '';   // what groups of did to the sentence
+  [chips.n1, chips.op, chips.n2, chips.eq, chips.total].forEach(el => el.classList.remove('hide'));
   $('#dial span').textContent = mem.level;   // Play has no level: there the dial shows and changes the addition level
   if (isPlay) {
     buildTray(2); buildNumrow(1, 10, false);
     play.list = []; play.reserved = 0;
     paintChip(chips.n1, 0); paintChip(chips.n2, 1); plainChip(chips.total, false);
     buildPiles(); playSentence(false);
+  } else if (isMult) {
+    buildTray(2); buildNumrow(1, 10, false);
+    games.mult.seq.sub = 0;
+    multDeal();
   } else {
     const A = mem.level === 'A';
     buildTray(A ? 1 : 2); buildNumrow(isTake ? 0 : 1, A ? 5 : 10, A);   // Level A: totals up to 5, top row only. Take away has a 0 at the left.
@@ -1015,8 +1280,10 @@ function setMode(m) {
 
 document.querySelectorAll('.mode').forEach(b => b.addEventListener('pointerdown', () => { if (b.dataset.mode !== mode) { sfx.tok(); setMode(b.dataset.mode); } }));
 layer.addEventListener('pointerdown', e => {
-  const el = e.target.closest('.apple'); if (!el) return;
-  if (mode === 'play') playRemove(el._a); else if (mode === 'ask') askTapApple(el._a); else takeTapApple(el._a);
+  const el = e.target.closest('.apple');
+  if (!el) { const p = e.target.closest('.plate'); if (p && mode === 'mult') multTapPlate(p._p); return; }
+  if (mode === 'play') playRemove(el._a); else if (mode === 'ask') askTapApple(el._a);
+  else if (mode === 'take') takeTapApple(el._a); else multTapApple(el._a);
 });
 $('#zones').addEventListener('pointerdown', e => { const p = e.target.closest('.pile'); if (p && mode === 'play') playAdd(+p.dataset.c); });
 $('#tumble').addEventListener('pointerdown', () => { if (mode === 'play') playTumble(); });
@@ -1030,6 +1297,7 @@ numrow.addEventListener('pointerdown', e => { const b = e.target.closest('button
     dial.classList.add('holding');
     timer = setTimeout(() => {
       stop();
+      if (mode === 'mult') return;                         // one level for now: the dial is hidden there, and must never flip another game's level
       const g = games[mode === 'take' ? 'take' : 'ask'];   // in Play, the addition level
       g.mem.level = g.mem.level === 'A' ? 'B' : 'A'; save(); resetSeq(g); sfx.ting(); setMode(mode);
     }, 900);
@@ -1041,7 +1309,7 @@ numrow.addEventListener('pointerdown', e => { const b = e.target.closest('button
 const hand = $('#hand'); let lastTouch = performance.now(), handAnim = null;
 function hideHand() { hand.style.opacity = 0; if (handAnim) { handAnim.cancel(); handAnim = null; } }
 function showHand() {
-  const st = mode === 'take' ? take : ask;
+  const st = game();
   if (mode !== 'play' && (st.busy || Q.pending)) return;
   let from, to, glyph = '👆';
   const sweep = () => {   // sweep along the whole number row, never point at one number
@@ -1055,6 +1323,10 @@ function showHand() {
   } else if (mode === 'ask') {
     const home = ask.apples.find(a => a.at.t === 'home');
     if (home) from = to = home.pos; else sweep();   // everything is on the tray
+  } else if (mode === 'mult') {
+    if (!mult.asked) return;
+    const empty = mult.plates.find(p => p.state === 'empty');   // the leftmost empty plate, then the number row
+    if (empty) from = to = plateAt(empty.i); else sweep();
   } else {
     if (!take.asked) return;
     const car = take.gone.includes(null) ? take.apples.find(a => a.at.t === 'tray') : null;   // a place is empty: point at a car
