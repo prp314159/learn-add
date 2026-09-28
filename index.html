@@ -1083,13 +1083,15 @@ function takeBeats() {
 /* ==================== ✖️ How many altogether? ==================== */
 // The same group, again and again. He taps an empty plate and a whole group lands on it: one tap is one group, where
 // in adding one tap was one car. In 3 × 2 the 3 counts plates and the 2 counts what is on each plate.
+const PLATE_GAP = 400;   // ms between plate sounds, dealt or read back: closer, and they run together into one
 const mult = { sum: null, plates: [], apples: [], total: 0, asked: false, misses: 0, busy: false, pending: null, run: 0, runTimer: 0 };
 const landed = () => mult.plates.filter(p => p.state === 'full').length * mult.sum.b;
 const dishAnim = (p, frames, ms) => anim(p.dish, frames, { duration: ms, easing: 'ease-out' });
 const glowPlates = () => mult.plates.forEach(p => { p.dish.classList.remove('glow'); void p.dish.offsetWidth; p.dish.classList.add('glow'); });
 function clearPlates() { mult.plates.forEach(p => p.el.remove()); mult.plates = []; mult.apples = []; }
 
-// The question: 3 × 2 = ? pops in. Half a second later the 3 pulses and three empty plates pop in, a plate sound each.
+// The question: 3 × 2 = ? pops in. Half a second later the 3 pulses and three empty plates pop in, a plate sound each,
+// far enough apart (0.4 s) that every plate sound is heard on its own.
 // Both numbers are amounts he can see: the plates now, and the 2 with every group that lands.
 function multDeal() {
   const s = nextSum(games.mult);
@@ -1107,7 +1109,7 @@ function multDeal() {
   enqueue(async () => {
     const g = gen;
     await sleep(500); if (g !== gen) return;
-    pulse(chips.n1, 1.35, 200 * s.a + 200);
+    pulse(chips.n1, 1.35, PLATE_GAP * s.a + 200);
     for (let i = 0; i < s.a; i++) {
       const el = document.createElement('div'), dish = document.createElement('span');
       el.className = 'plate'; dish.className = 'dish'; el.appendChild(dish);
@@ -1118,7 +1120,7 @@ function multDeal() {
       layer.insertBefore(el, layer.firstChild);   // under everything that lies or lands on it
       dishAnim(p, [{ transform: 'scale(0)' }, { transform: 'scale(1.12)' }, { transform: 'scale(1)' }], 300);
       sfx.plate();
-      await sleep(200); if (g !== gen) return;
+      await sleep(PLATE_GAP); if (g !== gen) return;
     }
     mult.asked = true; numrow.classList.remove('inert');
   });
@@ -1206,7 +1208,7 @@ async function multEvaluate(n) {
 // food bounces together and the 2 pulses with it, every plate playing the same short figure: 2, and 2, and 2. This
 // is where the repeated addition lives: it is never written on the screen. Then the 6 pulses with all of it.
 function multBeats() {
-  const { a, b } = mult.sum, q = a >= 4 ? .75 : 1, tick = 250 * q, each = 400 * q, beats = [];   // a quarter shorter with 4 or 5 plates
+  const { a, b } = mult.sum, q = a >= 4 ? .75 : 1, tick = PLATE_GAP, each = 400 * q, beats = [];   // the groups a quarter shorter with 4 or 5 plates
   mult.plates.forEach((p, i) => beats.push({
     ms: tick, text: i ? '' : WORDS[a], sound: () => sfx.plate(),
     also: () => { if (!i) pulse(chips.n1, 1.35, tick * a); dishAnim(p, [{ transform: 'scale(1)' }, { transform: 'scale(1.1)' }, { transform: 'scale(1)' }], tick); },

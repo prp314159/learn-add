@@ -52,7 +52,7 @@ game taught him anything.
 ```
 
 1. **The question.** `3 × 2 = ?` pops in, centred over the plates. About half a second later the `3`
-   pulses and three empty plates pop in, 200 ms apart, a soft plate sound each (its own sound, lower than
+   pulses and three empty plates pop in, 400 ms apart, a soft plate sound each (its own sound, lower than
    the mode button's tok). The number row wakes when the last plate lands.
 2. **He taps an empty plate.** Its group drops on from just above, all together, and the plate dips a
    little. The `2` pulses with every landing. A quick ripple of notes plays the new count, the last one
@@ -167,7 +167,7 @@ always comes first.
   group stressed, the whole count still capped at about 6 s).
 - **Read-back sounds.** `readBack` plays `sfx.read(i)`, which has three notes, so a beat per plate reads
   `undefined`. Beats get their own sound field (plate sound, group figure, chord); the older games keep
-  the default. Beats of 250 ms and 400 ms a plate, then 700 ms; a quarter shorter with 4 or 5 plates.
+  the default. Beats of 400 ms and 400 ms a plate, then 700 ms; the group beats a quarter shorter with 4 or 5 plates.
 - **Reused as they are:** `enqueue`, `newGen`, `gen`, `touchCount`, `wiggle`, `pulse`, `popIn`,
   `giveStar`, `trophy`, `nextSum`, `sumSolved`, `draw`, with `games.mult = { mem: store.mult, PASS:
   PASS.mult, pool: poolMult, seq: newSeq(), partner: s => s }`. A fact is `{ a, b }` (plates, on each),
