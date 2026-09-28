@@ -114,15 +114,14 @@ Two things make this more than "count what is left":
    proof moves in "How many?". The sentence shows just `5`, and the number row is faded and does nothing
    yet. Nothing is counted for him: no notes, no numbers. He can touch the cars to count them if he wants
    to (a wiggle and a note, as in "How many?").
-2. **The question.** A second and a half after the whole has landed, `− 2 = ?` pops into the sentence and
+2. **The question.** A moment (0.3 s) after the whole has landed, `− 2 = ?` pops into the sentence and
    two empty dashed places pop in under the `2`, one after the other, with a tok each. Two places, two
-   must go. The number row wakes up. The question waits for him: every touch on a car during the pause
-   restarts it, so he can count the whole in peace and a car never leaves mid-count. The arrival is loud on
+   must go. The number row wakes up. (The first version waited a second and a half, restarted by every
+   touch on a car; in practice he filled the pause with taps that did nothing, so it was cut.) The arrival is loud on
    purpose, because from this moment a touch on a car means something new. That is the one place where
    the same touch changes its meaning, from counting to taking away, and it is the biggest risk in the
    design: the first sessions are its test, and "What to watch for" has the sign that it is not working and
-   the fallback. The second and a half is a guess, like the two seconds of Quick look in the addition plan,
-   to be tuned by watching him.
+   the fallback.
 3. **He takes them away.** He taps a car on the tray and it hops up into a place. Each hop plays the note
    of the new count in the places (1, then 2): the notes count what he is counting, the two he takes
    away, and they rise with the tok, tok that announced the places. The tray closes the gap behind it, so

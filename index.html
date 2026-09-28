@@ -960,11 +960,11 @@ function takeDeal() {
     takeWait();
   });
 }
-// The question waits a moment after the whole has landed, and every touch on a car restarts the wait, so he can count
-// the whole in peace and a car never leaves mid-count. A second and a half is a guess, to be tuned by watching him.
+// The question follows the whole almost at once. It used to wait a second and a half, restarted by every touch on a
+// car, but he filled that pause with taps that did nothing and only made it longer.
 function takeWait() {
   clearTimeout(take.askTimer);
-  if (!take.asked) take.askTimer = setTimeout(takeAsk, 1500);
+  if (!take.asked) take.askTimer = setTimeout(takeAsk, 300);
 }
 // "− 2 = ?" pops into the sentence, and two empty places pop in under the 2, one after the other, with a tok each.
 // Two places, two must go. From this moment a touch on a car on the tray takes it away, and the number row wakes up.
@@ -1000,7 +1000,7 @@ function takeTapApple(a) {
     return;
   }
   if (a.at.t !== 'tray') return;
-  if (!take.asked) { touchCount(take, a); takeWait(); return; }   // before the question: touching is counting, and the question waits
+  if (!take.asked) { touchCount(take, a); return; }               // before the question: touching is counting
   const i = take.gone.indexOf(null);
   if (i < 0) { touchCount(take, a); return; }                      // the places are full: touching is counting, as in "How many?"
   // It hops up into the next place, the tray closes the gap behind it, and the note says how many are now in the places.
