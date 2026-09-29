@@ -72,6 +72,26 @@ Before the first session, and again after two or three weeks, do the five-minute
 and cups (or plates) from "Step zero" in the plan of that game. What he does differently is the only real
 evidence that the app taught him anything.
 
+On paper, once he plays "How many altogether?" happily (two or three sums now and then, most of the play
+stays on the screen):
+
+- **Circles first, then fill them.** For `2 × 3` he draws both circles (the circles are the plates), then
+  puts 3 in each, then counts them all. Doing it in that order ties the first number to the circles.
+- **Dots, not fruits.** Drawing twelve mangoes tires a small hand, and the maths gets lost in the drawing.
+- Ask the same two questions as on the screen: **"how many circles? how many in each?"**
+- **The mistake to watch for:** `2 × 3` drawn as one circle with 2 and one with 3. He is reading the `×`
+  as `+`. Go back to the two questions.
+- **The other way round, now and then:** you draw 3 circles with 2 dots in each, and he says the sum.
+- **The big challenge, much later:** `3 × 4` on paper. The app never asks it (its totals stop at 10), and
+  its two numbers differ, so you can see which one became circles. Three circles of 4 is the pass; the 12
+  matters less, and a miscount to 11 is still a pass. Call it a challenge, not an exam: if it goes wrong,
+  it only shows what to practise.
+- **Judge readiness by what you see, not by "I'm confident"**: he answers the two questions without a
+  slip, and he knows one more plate is 2 more, not 1 more.
+- **One pass is not enough.** A few days later, try `4 × 3`: four circles of 3, not three of 4, shows he
+  reads the order and did not just remember a picture. Then a story with nothing written down: "3 boxes,
+  4 mangoes in each box. How many mangoes?" He turns the words into the drawing himself.
+
 ## What to watch for
 
 The lists are in [PLAN.md](PLAN.md), [PLAN-SUBTRACTION.md](PLAN-SUBTRACTION.md) and
@@ -98,9 +118,10 @@ behind `const VOICE = false;` in `index.html`, with no setting on the screen.
 The objects are emoji pairs at the top of the script in `index.html` (`SETS`). Put what he loves first.
 A new pair comes after every trophy. Keep the pairs red and blue or red and yellow, never red and green.
 
-The food on the plates of ✖️ is the list right below it (`FOODS`): green mangoes, oranges, apples, one
-kind and one colour at a time. A new food comes after a trophy won in ✖️. Pick food with no parts he
-could count: a cookie has chocolate chips, cherries come as a pair, grapes as a bunch.
+The food on the plates of ✖️ is the list right below it (`FOODS`), in the order he chose: green mangoes,
+watermelon slices, kiwis, strawberries, avocados, one kind and one colour at a time. A new food comes after
+a trophy won in ✖️. Pick food that does not come as pieces he could count: cherries come as a pair, grapes
+as a bunch, a cookie has big chocolate chips. Small seeds on one fruit are fine.
 
 ## Running it
 
