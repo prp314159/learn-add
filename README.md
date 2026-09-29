@@ -30,6 +30,8 @@ the dial is hidden there. The app remembers the levels and his place in the sums
 
 ## Parent card
 
+A short version to print or keep on a phone is [parent-guide.html](parent-guide.html).
+
 The words of addition ("and", "altogether", "makes") are part of the idea, and the app cannot say them.
 For the first sessions at least, sit with him:
 

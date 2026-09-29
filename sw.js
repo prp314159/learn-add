@@ -2,7 +2,7 @@
 // It shows the saved copy straight away and quietly fetches any newer version for next time.
 // The optional number words in sounds/ are saved the first time they are played.
 const CACHE = 'learn-add-v1';
-const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
+const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'parent-guide.html'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));

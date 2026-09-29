@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parent Guide</title>
+<meta name="theme-color" content="#fff6e5">
+<link rel="icon" href="icon-192.png">
+<style>
+  :root {
+    --bg: #fff6e5;
+    --card: #ffffff;
+    --ink: #4a3a2a;
+    --soft: #7a6652;
+    --line: #f0dcb8;
+    --add: #e8833a;
+    --take: #3a8fd8;
+    --mult: #4caf50;
+    --dot: #4a3a2a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #221c16; --card: #2e261e; --ink: #f3e6d4; --soft: #c2ad94; --line: #45392c; --dot: #f3e6d4;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #221c16; --card: #2e261e; --ink: #f3e6d4; --soft: #c2ad94; --line: #45392c; --dot: #f3e6d4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: ui-rounded, "SF Pro Rounded", "Arial Rounded MT Bold", "Nunito", system-ui, sans-serif;
+    font-size: 18px; line-height: 1.5;
+  }
+  main { max-width: 680px; margin: 0 auto; padding: 32px 16px 48px; }
+  h1 { font-size: 2rem; margin: 0 0 4px; }
+  .lead { color: var(--soft); margin: 0 0 28px; }
+  section {
+    background: var(--card); border: 2px solid var(--line); border-radius: 20px;
+    padding: 20px 22px; margin: 0 0 20px;
+  }
+  section.add  { border-top: 8px solid var(--add); }
+  section.take { border-top: 8px solid var(--take); }
+  section.mult { border-top: 8px solid var(--mult); }
+  h2 { font-size: 1.4rem; margin: 0 0 4px; display: flex; align-items: center; gap: 10px; }
+  .idea { font-size: 1.1rem; margin: 0 0 14px; }
+  .picture {
+    font-size: 1.6rem; text-align: center; letter-spacing: 2px; margin: 0 0 14px;
+    display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  .picture .sign { font-size: 1.3rem; color: var(--soft); letter-spacing: 0; }
+  .gone { opacity: .25; }
+  .plate {
+    width: 64px; height: 64px; border-radius: 50%; border: 3px solid var(--soft);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  }
+  .plate i { width: 12px; height: 12px; border-radius: 50%; background: var(--dot); display: block; }
+  h3 { font-size: 1rem; text-transform: uppercase; letter-spacing: .06em; color: var(--soft); margin: 16px 0 4px; }
+  ul { margin: 0; padding-left: 22px; }
+  li { margin: 4px 0; }
+  .say { font-weight: 700; }
+  .rules li { margin: 6px 0; }
+  footer { color: var(--soft); font-size: .95rem; text-align: center; margin-top: 8px; }
+  @media print {
+    body { font-size: 14px; background: #fff; }
+    section { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Parent Guide</h1>
+<p class="lead">A few simple ways to help your child understand adding, taking away and groups. Sit with
+him for the first sessions and talk while he plays.</p>
+
+<section>
+  <h2>🌟 Always</h2>
+  <ul class="rules">
+    <li><b>Real things first:</b> cars, blocks, grapes. The screen comes after.</li>
+    <li><b>Short and happy:</b> ten minutes is plenty. A trophy is a good moment to stop.</li>
+    <li><b>Ask "how did you know?"</b> Any answer is good. Explaining is where learning settles.</li>
+    <li><b>A mistake is a clue,</b> not a failure. Count it again together, slowly.</li>
+  </ul>
+</section>
+
+<section class="add">
+  <h2>➕ Adding</h2>
+  <p class="idea">Two groups come together. How many are there now?</p>
+  <div class="picture" aria-label="3 cars and 2 cars make 5 cars">
+    <span>🚗🚗🚗</span><span class="sign">and</span><span>🚙🚙</span><span class="sign">make</span><span>5</span>
+  </div>
+  <h3>Say</h3>
+  <ul><li class="say">"3 and 2 make 5."</li></ul>
+  <h3>Ask</h3>
+  <ul>
+    <li>"How many altogether?"</li>
+    <li>"What if one more came?"</li>
+  </ul>
+  <h3>Away from the screen</h3>
+  <ul><li>"You have 3 cars. I give you 2 more. How many cars now?"</li></ul>
+</section>
+
+<section class="take">
+  <h2>➖ Taking away</h2>
+  <p class="idea">Some go away. How many are left?</p>
+  <div class="picture" aria-label="5 grapes, 2 eaten, 3 left">
+    <span>🍇🍇🍇<span class="gone">🍇🍇</span></span><span class="sign">leaves</span><span>3</span>
+  </div>
+  <h3>Say</h3>
+  <ul><li class="say">"5 take away 2 leaves 3."</li></ul>
+  <h3>Ask</h3>
+  <ul>
+    <li>"How many are left?"</li>
+    <li>"What if one more went away?"</li>
+  </ul>
+  <h3>Away from the screen</h3>
+  <ul>
+    <li>Five fingers up, fold two down.</li>
+    <li>"You have 5 grapes and eat 2." And: "You eat all 3. How many left? None!"</li>
+  </ul>
+  <h3>Watch for</h3>
+  <ul><li>If he answers 2 (the ones that went), point to the ones still there and ask "how many are <b>left</b>?"</li></ul>
+</section>
+
+<section class="mult">
+  <h2>✖️ Groups</h2>
+  <p class="idea">The same group, again and again. <b>3 × 2</b> means 3 plates with 2 on each.</p>
+  <div class="picture" aria-label="3 plates with 2 on each make 6">
+    <span class="plate"><i></i><i></i></span>
+    <span class="plate"><i></i><i></i></span>
+    <span class="plate"><i></i><i></i></span>
+    <span class="sign">make</span><span>6</span>
+  </div>
+  <h3>Say</h3>
+  <ul>
+    <li class="say">"3 plates. 2 on each. 6 altogether."</li>
+    <li>Later: "3 groups of 2 make 6."</li>
+  </ul>
+  <h3>Ask</h3>
+  <ul>
+    <li>"How many plates? How many on each?"</li>
+    <li>"What if one more plate came?"</li>
+  </ul>
+  <h3>Away from the screen</h3>
+  <ul><li>Wheels on cars, socks in pairs, legs on chairs. Always ask "how many on each?"</li></ul>
+  <h3>On paper</h3>
+  <ul>
+    <li>Draw the circles first, then put dots in each, then count them all.</li>
+    <li>Much later, a big challenge: <b>3 × 4</b>. Three circles with 4 dots each is a pass.</li>
+  </ul>
+  <h3>Watch for</h3>
+  <ul><li>If he says 5 for 3 × 2, he is adding. Ask again: "how many plates? how many on each?"</li></ul>
+</section>
+
+<footer>Go slowly. Understanding comes before speed.</footer>
+
+</main>
+</body>
+</html>
