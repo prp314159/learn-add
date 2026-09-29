@@ -23,10 +23,13 @@ again. The thinking behind every choice is in [PLAN.md](PLAN.md),
   straight away and the app fills the plates for him. Totals up to 10, eight facts. The stars and the
   trophy are shared with the other two question games.
 
-The small round letter in the corner is the parent dial. **Press and hold it** for a second to switch
-between Level A (up to 5) and Level B (6 to 10). Each question game has its own level, and the dial shows
-and changes the level of the game he is in (in Play, the addition level). ✖️ has one level for now, so
-the dial is hidden there. The app remembers the levels and his place in the sums of each game.
+The small round letter in the corner is the parent dial. **Press and hold it** for a second and the parent
+panel opens: the few lines to say, ask and watch for in the game he is in, and in ➕ and ➖ the level, Level
+A (up to 5) or Level B (6 to 10). Tap the other level to switch, or tap anywhere else to close. It only
+opens while the game is still, so nothing plays under it and closing it loses nothing. Each question game
+has its own level, and the dial shows the level of the game he is in (in Play, the addition level). ✖️ has
+one level for now, so its panel has only the card. The app remembers the levels and his place in the sums
+of each game.
 
 ## Parent card
 

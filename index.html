@@ -201,6 +201,24 @@
   #turn span { animation: turn 2s ease-in-out infinite; }
   @keyframes turn { 0%, 20% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
   @media (orientation: portrait) and (max-width: 600px) { #turn { display: flex; } }
+
+  /* the parent panel, behind the dial's hold: plain and quiet, with nothing in it that is fun to find */
+  #parent { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; background: #fff6e5f2; z-index: 5; }
+  #parent.on { display: flex; }
+  #parent .card {
+    width: min(94%, calc(var(--u) * 11)); max-height: 94%; overflow: auto; background: #fff; color: var(--ink);
+    border-radius: calc(var(--u) * .3); padding: calc(var(--u) * .4) calc(var(--u) * .5); box-shadow: 0 calc(var(--u) * .06) 0 #0001;
+    font-size: max(15px, calc(var(--u) * .34)); line-height: 1.4;
+  }
+  #parent h2 { margin: 0 0 .5em; font-size: 1.15em; }
+  #parent dl { display: grid; grid-template-columns: auto 1fr; gap: .35em 1em; margin: 0; }
+  #parent dt { color: #a08c74; font-weight: 800; }
+  #parent dd { margin: 0; }
+  #parent .foot { display: flex; align-items: center; justify-content: space-between; gap: 1em; margin-top: .9em; }
+  #parent .levels { display: flex; gap: .5em; }
+  #parent .levels button { padding: .35em .9em; border-radius: 999px; background: #0000000d; font-weight: 700; }
+  #parent .levels button.on { background: #ffb74d; }
+  #parent .close { color: #a08c74; font-size: .85em; }
 </style>
 </head>
 <body>
@@ -214,7 +232,7 @@
     </div>
     <div id="meta">
       <div id="stars" aria-hidden="true"><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span></div>
-      <button id="dial" aria-label="Level, press and hold to change"><span>A</span></button>
+      <button id="dial" aria-label="Parent panel, press and hold"><span>A</span></button>
     </div>
     <div id="scene">
       <div id="top">
@@ -230,6 +248,13 @@
   </div>
   <div id="layer"><div id="big"></div><div id="hand">👆</div></div>
   <div id="trophy"><div class="cup">🏆</div><button class="go" aria-label="Again">▶️</button></div>
+  <div id="parent"><div class="card">
+    <h2></h2><dl></dl>
+    <div class="foot">
+      <div class="levels"><button data-l="A">A · up to 5</button><button data-l="B">B · 6 to 10</button></div>
+      <span class="close">Tap anywhere to close</span>
+    </div>
+  </div></div>
   <div id="turn"><span>📱</span></div>
 </div></div>
 
@@ -263,6 +288,18 @@ const FOODS = [
   { e: ['🍓'], bg: ['#c62828'], fg: ['#fff'] },
   { e: ['🥑'], bg: ['#33691e'], fg: ['#fff'] },
 ];
+// The parent panel: the few words of each game that the app cannot say, for the parent to say.
+const CARDS = {
+  play: { title: '✋ Play', say: ['As he moves them: "3 and 2 make 5."'], ask: ['"What if one more came?"'],
+          watch: 'No questions here. Let him explore.' },
+  ask:  { title: '➕ How many?', say: ['"3 and 2 make 5."'], ask: ['"How did you know?"', '"What if one more came?"'],
+          watch: 'After a miss, count along with him out loud.' },
+  take: { title: '➖ How many left?', say: ['"5 take away 2 leaves 3."'], ask: ['"How many are left?"', '"What if one more went away?"'],
+          watch: 'If he answers with the number taken away, ask "how many are left?"' },
+  mult: { title: '✖️ How many altogether?', say: ['"3 plates. 2 on each. 6 altogether."'],
+          ask: ['"How many plates? How many on each?"', '"What if one more plate came?"'],
+          watch: '5 for 3 × 2 means he read × as +. Ask the two questions again.' },
+};
 let setIdx = 0, foodIdx = 0;
 const set = () => mode === 'mult' ? FOODS[foodIdx] : SETS[setIdx];
 
@@ -1246,14 +1283,13 @@ function setMode(m) {
   document.body.classList.toggle('play', isPlay);
   document.body.classList.toggle('mult', isMult);
   $('#stars').classList.toggle('hide', isPlay);
-  $('#dial').classList.toggle('hide', isMult);   // groups of has one level for now, and a dial that does nothing is one more thing to wonder about
   $('#tumble').classList.toggle('hide', !isPlay);
   numrow.classList.toggle('hide', isPlay);
   chips.op.textContent = isTake ? '−' : isMult ? '×' : '+';
   chips.n2.classList.remove('gone');
   chips.n1.classList.remove('bare'); chips.total.style.borderColor = '';   // what groups of did to the sentence
   [chips.n1, chips.op, chips.n2, chips.eq, chips.total].forEach(el => el.classList.remove('hide'));
-  $('#dial span').textContent = mem.level;   // Play has no level: there the dial shows and changes the addition level
+  $('#dial span').textContent = mem.level;   // Play has no level: there the dial shows the addition level
   if (isPlay) {
     buildTray(2); buildNumrow(1, 10, false);
     play.list = []; play.reserved = 0;
@@ -1282,20 +1318,44 @@ $('#zones').addEventListener('pointerdown', e => { const p = e.target.closest('.
 $('#tumble').addEventListener('pointerdown', () => { if (mode === 'play') playTumble(); });
 numrow.addEventListener('pointerdown', e => { const b = e.target.closest('button'); if (b && mode !== 'play') answer(+b.dataset.n); });
 
-// The parent dial: press and hold, so he does not flip it by accident.
+// The parent dial: press and hold, so he does not open it by accident. It opens the parent panel: the card of this
+// game and, in ➕ and ➖, the level. It only opens while the game is still (no sum arriving, no count or read-back
+// playing), so nothing sounds or changes under the panel, and closing it loses nothing.
+const parent = $('#parent');
+const still = () => {
+  if (mode === 'play') return true;
+  const st = game();
+  return !st.busy && !Q.pending && !st.tidying && (mode === 'ask' || st.asked);
+};
 (() => {
-  const dial = $('#dial'); let timer = 0;
+  const dial = $('#dial'), levels = parent.querySelector('.levels'); let timer = 0, openedAt = 0;
   const stop = () => { clearTimeout(timer); dial.classList.remove('holding'); };
+  function open() {
+    const c = CARDS[mode], row = (k, v) => `<dt>${k}</dt><dd>${v}</dd>`;
+    parent.querySelector('h2').textContent = c.title;
+    parent.querySelector('dl').innerHTML = row('Say', c.say.join('<br>')) + row('Ask', c.ask.join('<br>')) + row('Watch', c.watch);
+    const leveled = mode === 'ask' || mode === 'take';   // Play has no level, and groups of has one for now
+    levels.classList.toggle('hide', !leveled);
+    if (leveled) levels.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.l === games[mode].mem.level));
+    hideHand(); parent.classList.add('on'); openedAt = performance.now();
+  }
   dial.addEventListener('pointerdown', () => {
+    if (!still()) return;
     dial.classList.add('holding');
-    timer = setTimeout(() => {
-      stop();
-      if (mode === 'mult') return;                         // one level for now: the dial is hidden there, and must never flip another game's level
-      const g = games[mode === 'take' ? 'take' : 'ask'];   // in Play, the addition level
-      g.mem.level = g.mem.level === 'A' ? 'B' : 'A'; save(); resetSeq(g); sfx.ting(); setMode(mode);
-    }, 900);
+    timer = setTimeout(() => { stop(); if (still()) open(); }, 900);   // a tap on the game during the hold can make it busy
   });
   ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => dial.addEventListener(ev, stop));
+  // Any tap closes it. Taps in the first 300 ms are ignored, so the end of the hold, or a quick second tap on the
+  // same spot, does nothing. The level changes only on the other letter, bottom left, far from the dial.
+  parent.addEventListener('pointerdown', e => {
+    if (performance.now() - openedAt < 300) return;
+    parent.classList.remove('on');
+    const b = e.target.closest('.levels button');
+    if (!b || (mode !== 'ask' && mode !== 'take')) return;
+    const g = games[mode];
+    if (b.dataset.l === g.mem.level) return;
+    g.mem.level = b.dataset.l; save(); resetSeq(g); sfx.tok(); setMode(mode);
+  });
 })();
 
 /* ---------- the pointing hand: a short demo when nothing happens for a while ---------- */
@@ -1338,7 +1398,7 @@ addEventListener('pointerdown', () => { audio(); lastTouch = performance.now(); 
 ['pointerup', 'touchend', 'click'].forEach(ev => addEventListener(ev, () => { audio(); wakeVoice(); }, true));
 setInterval(() => {
   if (handAnim && handAnim.playState === 'running') return;
-  if ($('#trophy').classList.contains('on')) return;
+  if ($('#trophy').classList.contains('on') || parent.classList.contains('on')) return;
   if (performance.now() - lastTouch > 5000) showHand();
 }, 1000);
 
