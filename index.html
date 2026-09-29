@@ -253,8 +253,9 @@ const SETS = [
 // Groups of: food on plates, one kind and one colour. The same shape as a set above, so the objects and the chips
 // read it the same way. A new food comes after a trophy won in that game.
 // A food must have no parts he could count: no cookie (its chocolate chips), no cherries (a pair), no grapes.
+// f: a CSS filter on the emoji. There is no green mango emoji, so the ripe one is turned green.
 const FOODS = [
-  { e: ['🍓'], bg: ['#e53935'], fg: ['#fff'] },
+  { e: ['🥭'], bg: ['#558b2f'], fg: ['#fff'], f: 'hue-rotate(60deg)' },
   { e: ['🍊'], bg: ['#f57c00'], fg: ['#fff'] },
   { e: ['🍏'], bg: ['#43a047'], fg: ['#fff'] },
 ];
@@ -438,8 +439,9 @@ const sfx = {
       if (last) tone(freq(n) * 2, { t, dur: .3, vol: .1, type: 'sine' });
     }
   },
-  // The read-back: every plate plays the same short figure, so he hears the same 2 again: 2, and 2, and 2.
-  figure(b, quiet) { const k = quiet ? .4 : 1; for (let n = 1; n <= b; n++) tone(freq(n) * 2, { t: (n - 1) * .06, dur: n === b ? .3 : .14, vol: (n === b ? .32 : .2) * k }); },
+  // The read-back: every plate plays the same one soft, low note, so he hears the same again: 2, and 2, and 2.
+  // One note, not a quick run of notes: the run was a "tirik tirik" he did not like.
+  figure(b, quiet) { tone(freq(b), { dur: .35, type: 'sine', vol: quiet ? .1 : .18 }); },
   // quiet = the voice is speaking over it
   read(i, quiet) { const k = quiet ? .4 : 1; tone([523.25, 659.25, 783.99][i], { dur: .6, vol: .35 * k }); if (i === 2) tone(1046.5, { t: .05, dur: .8, vol: .25 * k }); },
 };
@@ -585,6 +587,7 @@ const T = p => `translate(${p.x}px, ${p.y}px) scale(${p.s})`;
 function makeApple(c) {
   const el = document.createElement('div'); el.className = 'apple';
   const face = document.createElement('span'); face.className = 'face'; face.textContent = set().e[c];
+  if (set().f) face.style.filter = set().f;
   const num = document.createElement('span'); num.className = 'num';
   el.append(face, num); layer.appendChild(el);
   const a = { el, face, num, c, at: { t: 'fly' }, pos: { x: 0, y: 0, s: 1 } };
