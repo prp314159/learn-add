@@ -342,12 +342,13 @@ const PASS = {
     A: [one(3, 2), one(4, 2), one(5, 2),                 // more plates: only the plates change, and each answer is 2 more
         one(2, 2), one(2, 3), one(2, 4), one(2, 5),      // two plates, more on each: the doubles he knows
         one(3, 3)],
-    // Level B: totals 11 to 20, still 2 to 5 on each plate (the dice shapes), so it is the plates that grow. Four runs,
-    // each going on from a fact of Level A, one more plate at a time: "what if one more plate came?" is the question.
-    B: [one(6, 2), one(7, 2), one(8, 2), one(9, 2), one(10, 2),   // more plates of 2, on from 5 × 2: each answer is 2 more, up to ten twos
+    // Level B: totals 11 to 20, up to 7 plates and up to 6 on each (the six faces of a die). Runs that go on from a fact
+    // of Level A, one more plate at a time: "what if one more plate came?" is the question. The six, a new shape, last.
+    B: [one(6, 2), one(7, 2),                                      // more plates of 2, on from 5 × 2: each answer is 2 more
         one(3, 5), one(4, 5),                                      // plates of 5, on from 2 × 5: the fives he knows from the clock, 15 and 20
         one(3, 4), one(4, 4), one(5, 4),                           // plates of 4, on from 2 × 4
-        one(4, 3), one(5, 3), one(6, 3)],                          // plates of 3, on from 3 × 3: the most counting by ones, so last
+        one(4, 3), one(5, 3), one(6, 3),                           // plates of 3, on from 3 × 3
+        one(2, 6), one(3, 6)],                                     // six on each: two plates first, so the shape is the only new thing
   },
 };
 function poolAdd(level) {
@@ -364,11 +365,12 @@ function poolTake(level) {
   for (let w = level === 'A' ? 2 : 6; w <= (level === 'A' ? 5 : 10); w++) for (let t = 1; t <= w; t++) out.push({ w, t });
   return out;
 }
-// Every fact of the level with at least two plates and 2 to 5 on each: a total up to 10 (eight facts) or 11 to 20 (thirteen).
-// Never more than 5 on a plate: the dice shapes stop there, and a group of 6 or more is counted, not seen.
+// Every fact of the level with 2 to 7 plates and 2 to 6 on each: a total up to 10 (eight facts) or 11 to 20 (twelve).
+// Never more than 6 on a plate: the faces of a die stop there, and a bigger group is counted, not seen. Never more
+// than 7 plates: with more, the row shrinks until the plates are saucers and the food is hard to see.
 function poolMult(level) {
   const out = [];
-  for (let a = 2; a <= 10; a++) for (let b = 2; b <= 5; b++) {
+  for (let a = 2; a <= 7; a++) for (let b = 2; b <= 6; b++) {
     const t = a * b;
     if (level === 'A' ? t <= 10 : (t >= 11 && t <= 20)) out.push({ a, b, c1: 0, c2: 1 });
   }
@@ -607,7 +609,8 @@ function homePos(zone, n, i) {
 // Groups of: one centred row of plates, low in the room that the zones and the tray share, so the big numeral fits
 // above the row and the sentence and the number row never move. All the plates of a sum are one size.
 // Level B has more plates than the row has room for at that size. The whole row then shrinks to fit: plates, gaps, the
-// dice shapes and the food alike, so ten plates of 2 are ten small saucers in one row, never two rows. Level A never shrinks.
+// dice shapes and the food alike, so seven plates of 2 are seven smaller plates in one row, never two rows. Level A never
+// shrinks, and Level B stops at 7 plates, so a plate is never less than about three fifths of its size.
 const ROW = 11.6;   // the room for the row, in units: a little inside the 12 of the scene
 const plateSize = b => b <= 2 ? 2 : 2.6;
 const platePitch = b => plateSize(b) + (b <= 2 ? .25 : .5);
@@ -619,17 +622,19 @@ function plateAt(i) {
 }
 const overPlates = () => { const c = band(); return { x: c.x, y: c.top + U * .95 }; };
 // Dice shapes, always the same way up: 2 one above the other, 3 a triangle, 4 a square, 5 a square with one in the
-// middle. A group is seen as one thing at a glance, and an upright pair keeps 5 × 2 from being a line of ten above
-// the ten buttons.
+// middle, 6 two columns of three (Level B). A group is seen as one thing at a glance, and an upright pair keeps 5 × 2
+// from being a line of ten above the ten buttons. The food is a little smaller the more there is on a plate.
 const DICE = {
   2: [[0, -.45], [0, .45]],
   3: [[0, -.5], [-.5, .4], [.5, .4]],
   4: [[-.46, -.46], [.46, -.46], [-.46, .46], [.46, .46]],
   5: [[-.56, -.56], [.56, -.56], [0, 0], [-.56, .56], [.56, .56]],
+  6: [[-.43, -.62], [.43, -.62], [-.43, 0], [.43, 0], [-.43, .62], [.43, .62]],
 };
+const FOOD = { 2: .9, 3: .84, 4: .84, 5: .74, 6: .64 };
 function onPlate(i, k) {
   const c = plateAt(i), b = mult.sum.b, z = shrink(), [dx, dy] = DICE[b][k];
-  return { x: c.x + dx * U * z, y: c.y + dy * U * z, s: (b <= 2 ? .9 : b === 5 ? .74 : .84) * z };
+  return { x: c.x + dx * U * z, y: c.y + dy * U * z, s: FOOD[b] * z };
 }
 function where(a) {
   if (a.at.t === 'tray') return trayPos(a.at.slot);
@@ -1158,9 +1163,6 @@ function takeBeats() {
 // The same group, again and again. He taps an empty plate and a whole group lands on it: one tap is one group, where
 // in adding one tap was one car. In 3 × 2 the 3 counts plates and the 2 counts what is on each plate.
 const PLATE_GAP = 400;   // ms between plate sounds, dealt or read back: closer, and they run together into one
-// With 6 plates or more (Level B) the plates come a little closer, 0.3 s, still heard one by one: ten at 0.4 s would be
-// 4 seconds of plates before he may answer, and as long again in the read-back.
-const plateGap = a => a >= 6 ? 300 : PLATE_GAP;
 const mult = { sum: null, plates: [], apples: [], total: 0, asked: false, misses: 0, busy: false, pending: null, run: 0, runTimer: 0 };
 const landed = () => mult.plates.filter(p => p.state === 'full').length * mult.sum.b;
 const dishAnim = (p, frames, ms) => anim(p.dish, frames, { duration: ms, easing: 'ease-out' });
@@ -1184,9 +1186,9 @@ function multDeal() {
   numrow.classList.add('inert');
   numrow.querySelectorAll('button').forEach(b => b.classList.remove('good', 'soft'));
   enqueue(async () => {
-    const g = gen, gap = plateGap(s.a);
+    const g = gen;
     await sleep(500); if (g !== gen) return;
-    pulse(chips.n1, 1.35, gap * s.a + 200);
+    pulse(chips.n1, 1.35, PLATE_GAP * s.a + 200);
     for (let i = 0; i < s.a; i++) {
       const el = document.createElement('div'), dish = document.createElement('span');
       el.className = 'plate'; dish.className = 'dish'; el.appendChild(dish);
@@ -1197,7 +1199,7 @@ function multDeal() {
       layer.insertBefore(el, layer.firstChild);   // under everything that lies or lands on it
       dishAnim(p, [{ transform: 'scale(0)' }, { transform: 'scale(1.12)' }, { transform: 'scale(1)' }], 300);
       sfx.plate();
-      await sleep(gap); if (g !== gen) return;
+      await sleep(PLATE_GAP); if (g !== gen) return;
     }
     mult.asked = true; numrow.classList.remove('inert');
   });
@@ -1261,9 +1263,9 @@ async function multEvaluate(n) {
     sfx.boop(); btn.classList.remove('soft'); void btn.offsetWidth; btn.classList.add('soft');
     await sleep(350); if (g !== gen) return;
     await multProof(); if (g !== gen) return;
-    // Level B: up to 20 to count, so the count gets a quarter second more per object past 10, and shorter pauses with many plates
+    // Level B: up to 20 to count, so the count gets a quarter of a second more per object past 10
     await recount(g, mult.apples, mult.misses >= 2, {
-      per: mult.sum.b, gap: mult.sum.a >= 6 ? 220 : 330, cap: 6000 + Math.max(0, mult.total - 10) * 250,
+      per: mult.sum.b, gap: 330, cap: 6000 + Math.max(0, mult.total - 10) * 250,
       big: k => { glowPlates(); return showBig(k, overPlates(), 1.8); },
     });
     if (g !== gen) return;
@@ -1289,8 +1291,7 @@ async function multEvaluate(n) {
 // food bounces together and the 2 pulses with it, every plate playing the same short figure: 2, and 2, and 2. This
 // is where the repeated addition lives: it is never written on the screen. Then the 6 pulses with all of it.
 function multBeats() {
-  // the groups a quarter shorter with 4 or 5 plates, and about half with 6 or more: ten plates still read back in under 6 s
-  const { a, b } = mult.sum, q = a >= 6 ? .55 : a >= 4 ? .75 : 1, tick = plateGap(a), each = 400 * q, beats = [];
+  const { a, b } = mult.sum, q = a >= 4 ? .75 : 1, tick = PLATE_GAP, each = 400 * q, beats = [];   // the groups a quarter shorter with 4 plates or more
   mult.plates.forEach((p, i) => beats.push({
     ms: tick, text: i ? '' : WORDS[a], sound: () => sfx.plate(),
     also: () => { if (!i) pulse(chips.n1, 1.35, tick * a); dishAnim(p, [{ transform: 'scale(1)' }, { transform: 'scale(1.1)' }, { transform: 'scale(1)' }], tick); },

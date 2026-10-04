@@ -21,9 +21,9 @@ again. The thinking behind every choice is in [PLAN.md](PLAN.md),
 - ✖️ **How many altogether?:** `3 × 2 = ?` arrives with three empty plates. He taps a plate and a whole
   group of 2 drops onto it: one tap is one group. Then he taps how many there are altogether, or answers
   straight away and the app fills the plates for him. Level A has totals up to 10, eight facts. Level B has
-  totals from 11 to 20, thirteen facts: more plates, never more than 5 on each, in a row that shrinks to fit,
-  and the numbers 1 to 20 in two rows of ten. The stars and the trophy are shared with the other two
-  question games.
+  totals from 11 to 20, twelve facts: up to 7 plates and up to 6 on each (the six faces of a die), in a row
+  that shrinks to fit, and the numbers 1 to 20 in two rows of ten. The stars and the trophy are shared with
+  the other two question games.
 
 The small round letter in the corner is the parent dial. **Press and hold it** for a second and the parent
 panel opens: the few lines to say, ask and watch for in the game he is in, and the level: in ➕ and ➖ Level
@@ -95,7 +95,7 @@ stays on the screen):
   10), and its two numbers differ, so you can see which one became circles. Three circles of 4 is the pass;
   the 12 matters less, and a miscount to 11 is still a pass. Call it a challenge, not an exam: if it goes
   wrong, it only shows what to practise. Level B asks `3 × 4` and `4 × 3`, so do this before he moves up, or
-  pick a fact the app never asks, such as `3 × 6` (it never puts more than 5 on a plate).
+  pick a fact the app never asks, such as `2 × 7` (it never puts more than 6 on a plate).
 - **Judge readiness by what you see, not by "I'm confident"**: he answers the two questions without a
   slip, and he knows one more plate is 2 more, not 1 more.
 - **One pass is not enough.** A few days later, try `4 × 3`: four circles of 3, not three of 4, shows he
