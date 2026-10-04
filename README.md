@@ -130,10 +130,9 @@ behind `const VOICE = false;` in `index.html`, with no setting on the screen.
 The objects are emoji pairs at the top of the script in `index.html` (`SETS`). Put what he loves first.
 A new pair comes after every trophy. Keep the pairs red and blue or red and yellow, never red and green.
 
-The food on the plates of ✖️ is the list right below it (`FOODS`), in the order he chose: green mangoes,
-watermelon slices, kiwis, strawberries, avocados, one kind and one colour at a time. A new food comes after
-a trophy won in ✖️. Pick food that does not come as pieces he could count: cherries come as a pair, grapes
-as a bunch, a cookie has big chocolate chips. Small seeds on one fruit are fine.
+The things on the plates of ✖️ are the list right below it (`FOODS`), in the order he chose: 🚗 🚙 ♥️ 💛
+🟨 🐢, one kind and one colour at a time. A new one comes after a trophy won in ✖️. Pick things that do not
+come as pieces he could count: cherries come as a pair, grapes as a bunch, a cookie has big chocolate chips.
 
 ## Running it
 

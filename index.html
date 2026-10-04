@@ -279,18 +279,18 @@ const SETS = [
   { e: ['📕', '📘'], bg: ['#e53935', '#1e88e5'], fg: ['#fff', '#fff'] },
   { e: ['🔴', '🟡'], bg: ['#e53935', '#fbc02d'], fg: ['#fff', '#4a3500'] },
 ];
-// Groups of: food on plates, one kind and one colour. The same shape as a set above, so the objects and the chips
-// read it the same way. A new food comes after a trophy won in that game.
-// A food must not come as several pieces he could count: no cherries (a pair), no grapes (a bunch), no cookie (its
-// big chocolate chips). Small seeds on one fruit (watermelon, kiwi, strawberry) are fine.
-// The order is his: green and red take turns. f: a CSS filter on the emoji. There is no green mango emoji, so the
-// ripe one is turned green.
+// Groups of: things on plates, one kind and one colour. The same shape as a set above, so the objects and the chips
+// read it the same way. A new one comes after a trophy won in that game.
+// A thing must not come as several pieces he could count: no cherries (a pair), no grapes (a bunch), no cookie (its
+// big chocolate chips).
+// The order is his: cars, hearts and toys.
 const FOODS = [
-  { e: ['🥭'], bg: ['#558b2f'], fg: ['#fff'], f: 'hue-rotate(60deg)' },
-  { e: ['🍉'], bg: ['#e53935'], fg: ['#fff'] },
-  { e: ['🥝'], bg: ['#689f38'], fg: ['#fff'] },
-  { e: ['🍓'], bg: ['#c62828'], fg: ['#fff'] },
-  { e: ['🥑'], bg: ['#33691e'], fg: ['#fff'] },
+  { e: ['🚗'], bg: ['#e53935'], fg: ['#fff'] },
+  { e: ['🚙'], bg: ['#1e88e5'], fg: ['#fff'] },
+  { e: ['♥️'], bg: ['#e53935'], fg: ['#fff'] },
+  { e: ['💛'], bg: ['#fbc02d'], fg: ['#4a3500'] },
+  { e: ['🟨'], bg: ['#fbc02d'], fg: ['#4a3500'] },
+  { e: ['🐢'], bg: ['#558b2f'], fg: ['#fff'] },
 ];
 // The parent panel: the few words of each game that the app cannot say, for the parent to say.
 const CARDS = {
