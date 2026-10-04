@@ -72,7 +72,7 @@ For "How many altogether?" (the number of plates always comes first):
   "you tapped 3 times. 3 times 2 is 6."
 - Never "3 plus 2", "times makes it bigger" or "tables".
 - If 2 × 3 comes right after 3 × 2 and he says "the same!", ask **"is it the same picture?"**
-- At Level B the same three beats, with bigger numbers: **"6 plates. 2 on each. 12 mangoes."** With plates
+- At Level B the same three beats, with bigger numbers: **"6 plates. 2 on each. 12 altogether."** With plates
   of 5, count the plates with him on the clock's numbers: "5, 10, 15, 20."
 - Away from the iPad: socks in pairs, wheels on cars, legs on chairs, fingers on hands, each with "how
   many on each?".
@@ -128,11 +128,12 @@ behind `const VOICE = false;` in `index.html`, with no setting on the screen.
 ## Changing the objects
 
 The objects are emoji pairs at the top of the script in `index.html` (`SETS`). Put what he loves first.
-A new pair comes after every trophy. Keep the pairs red and blue or red and yellow, never red and green.
+A new pair comes with every sum in ➕ and ➖, never inside one, and Play shows the current pair. Keep the
+pairs red and blue or red and yellow, never red and green.
 
 The things on the plates of ✖️ are the list right below it (`FOODS`), in the order he chose: 🚗 🚙 ♥️ 💛
-🟨 🐢, one kind and one colour at a time. A new one comes after a trophy won in ✖️. Pick things that do not
-come as pieces he could count: cherries come as a pair, grapes as a bunch, a cookie has big chocolate chips.
+🟨 🐢, one kind and one colour at a time. A new one comes with every sum. Pick things that do not come as
+pieces he could count: cherries come as a pair, grapes as a bunch, a cookie has big chocolate chips.
 
 ## Running it
 

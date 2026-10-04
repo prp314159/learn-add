@@ -166,7 +166,7 @@ Then the next sum. Five stars, the trophy, and the object changes as a treat, as
   the answer before anything happens. That is crossing out, a fine method on paper later, but not the act.
   Place and brightness tell the parts apart, not colour, and the numerals follow the same rule: the `5`
   and the `3` are in the object's colour, the `2` is the same colour faded, like the cars it describes.
-  The object still changes after every trophy.
+  The object changes between sums, never inside one (at first after every trophy, now with every sum).
 - **Faded, not gone.** The taken-away cars are the same cars, a little faded and smaller. If they vanished
   (eaten, driven off), the `2` in the sentence would describe nothing on the screen, and the rule that every
   visible number has its group would break. A child who counts everything may count the faded ones too.

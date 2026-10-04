@@ -148,7 +148,7 @@ to 7 plates and up to 6 on each.** Twelve facts:
 - **The row shrinks to fit.** Seven plates of 2 do not fit the row at the size of Level A, and this plan says one row,
   never two. So the whole row shrinks, plates, gaps, shapes and food alike, until it fits inside the scene. Level A
   never shrinks: the fit is only for rows that need it. This is the "something smaller" of the request: the food
-  stays, smaller, rather than turning into dots, so the colour of the `2` and the treat after a trophy keep their
+  stays, smaller, rather than turning into dots, so the colour of the `2` and the new food with each sum keep their
   meaning.
 - **The number row is 1 to 20, in two rows of ten**, 11 under 1, so a teen is seen as ten and some. One row of twenty
   would be too small for his finger; two rows fit the height of the row at a size a little smaller than the ten of
@@ -165,7 +165,7 @@ to 7 plates and up to 6 on each.** Twelve facts:
   numbers on the food keep a readable size on a shrunken row.
 - **Notes.** A count to 20 climbs the same ladder of five notes; 11 to 15 go up one more octave, and 16 to 20 stay
   there rather than squeal.
-- **The parent.** The same three beats with bigger numbers: "6 plates. 2 on each. 12 mangoes." With plates of 5, count
+- **The parent.** The same three beats with bigger numbers: "6 plates. 2 on each. 12 altogether." With plates of 5, count
   the plates with him on the clock's numbers: "5, 10, 15, 20." Watch whether he counts the plates of 2 in twos, and
   whether he finds 12 under the 2 on the number row without searching.
 - **Saved** as `store.mult.level` and `pos.B`, under the same key; an old save loads at Level A.
@@ -227,7 +227,7 @@ always comes first.
   sentence and number row never move); the dice offsets; the plate sound; the arrival, half a second after
   the sentence, number row inert until it ends; the tap, drop and dip, one group per plate however fast he
   taps; `multEvaluate` shaped like `takeEvaluate`; the proof drop; `multBeats`; `poolMult`; the slide-off;
-  a food list shaped like a `SETS` entry, read by `makeApple` and `paintChip` in ✖️, the trophy moving on
+  a food list shaped like a `SETS` entry, read by `makeApple` and `paintChip` in ✖️, every solved sum moving on
   to the next food. Never called from ✖️: `glowCells`, `tidy`, `bringRest`, `trayPos`, `bits`.
 - **Saved:** `store.mult = { level: 'A', pos: { A: 0 } }` under the same key `learn-add-v1`. An old save
   loads with `mult` at its start. Stars and trophy are shared. About 200 new lines, ten edited spots.
@@ -251,7 +251,8 @@ always comes first.
 
 1. **It goes ahead**, on the same screen, fourth icon ✖️, totals up to 10.
 2. **`3 × 2` is read "3 groups of 2"**, the number of groups first, as in NCERT.
-3. **Food on the plates** (strawberries, oranges, apples), a new one after a trophy won in ✖️. His cars
+3. **Food on the plates** (strawberries, oranges, apples), a new one with every sum (at first only after a
+   trophy won in ✖️). His cars
    stay in the other games. No cookies: the chocolate chips on a cookie are a small group he could count.
 4. **✖️ is always available**, like ➕ and ➖ (at first it was earned with a trophy in ➖; that was dropped).
 5. Every other choice (the plate tap, no waiting places, the colours, one sentence, the help, the facts,

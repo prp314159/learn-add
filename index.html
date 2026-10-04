@@ -271,7 +271,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const lerp = (a, b, t) => a + (b - a) * t;
 
 /* ---------- the objects: two colours of one kind of thing ----------
-   Put what he loves first. The object changes after every trophy, never inside one sum.
+   Put what he loves first. The object changes with every sum, never inside one.
    Red and blue or red and yellow, never red and green. */
 const SETS = [
   { e: ['🚗', '🚙'], bg: ['#e53935', '#1e88e5'], fg: ['#fff', '#fff'] },
@@ -280,7 +280,7 @@ const SETS = [
   { e: ['🔴', '🟡'], bg: ['#e53935', '#fbc02d'], fg: ['#fff', '#4a3500'] },
 ];
 // Groups of: things on plates, one kind and one colour. The same shape as a set above, so the objects and the chips
-// read it the same way. A new one comes after a trophy won in that game.
+// read it the same way. A new one comes with every sum in that game.
 // A thing must not come as several pieces he could count: no cherries (a pair), no grapes (a bunch), no cookie (its
 // big chocolate chips).
 // The order is his: cars, hearts and toys.
@@ -923,8 +923,8 @@ async function evaluate(n) {
   if (stars >= 5) {
     await trophy(); if (g !== gen) return;
     stars = 0; paintStars();
-    setIdx = (setIdx + 1) % SETS.length;   // a new object as a treat, never inside one sum
   }
+  setIdx = (setIdx + 1) % SETS.length;   // a new object for every sum, never inside one
   await sleep(150); if (g !== gen) return;
   deal();
 }
@@ -1134,8 +1134,8 @@ async function takeEvaluate(n) {
   if (stars >= 5) {
     await trophy(); if (g !== gen) return;
     stars = 0; paintStars();
-    setIdx = (setIdx + 1) % SETS.length;   // a new object as a treat, never inside one sum
   }
+  setIdx = (setIdx + 1) % SETS.length;   // a new object for every sum, never inside one
   await sleep(150); if (g !== gen) return;
   takeDeal();
 }
@@ -1282,8 +1282,8 @@ async function multEvaluate(n) {
   if (stars >= 5) {
     await trophy(); if (g !== gen) return;
     stars = 0; paintStars();
-    foodIdx = (foodIdx + 1) % FOODS.length;   // a new food as a treat, never inside one sum
   }
+  foodIdx = (foodIdx + 1) % FOODS.length;   // a new food for every sum, never inside one
   await multClear(); if (g !== gen) return;
   multDeal();
 }
