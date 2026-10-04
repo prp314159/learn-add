@@ -144,6 +144,10 @@
   /* Level B of take away: eleven buttons, 0 to 10, a twentieth smaller so that they fit across the scene */
   #numrow.eleven { gap: calc(var(--u) * .1); }
   #numrow.eleven button { width: calc(var(--u) * .95); height: calc(var(--u) * .95); font-size: calc(var(--u) * .53); }
+  /* Level B of groups of: twenty buttons, 1 to 20, in two rows of ten, so that 11 sits under 1: a teen is ten and some.
+     Two rows of ten fit the row's height only a little smaller; one row of twenty would be too small for his finger. */
+  #numrow.twenty { display: grid; grid-template-columns: repeat(10, calc(var(--u) * .68)); gap: calc(var(--u) * .08) calc(var(--u) * .1); align-content: center; justify-content: center; }
+  #numrow.twenty button { width: calc(var(--u) * .68); height: calc(var(--u) * .68); font-size: calc(var(--u) * .42); box-shadow: 0 calc(var(--u) * .05) 0 #d9c7ab; }
   #numrow.inert { pointer-events: none; opacity: .45; }
   #numrow button.good { background: #c8f1c1; box-shadow: 0 calc(var(--u) * .07) 0 #8fcf85; }
   #numrow button.soft { animation: shake .35s; }
@@ -338,6 +342,12 @@ const PASS = {
     A: [one(3, 2), one(4, 2), one(5, 2),                 // more plates: only the plates change, and each answer is 2 more
         one(2, 2), one(2, 3), one(2, 4), one(2, 5),      // two plates, more on each: the doubles he knows
         one(3, 3)],
+    // Level B: totals 11 to 20, still 2 to 5 on each plate (the dice shapes), so it is the plates that grow. Four runs,
+    // each going on from a fact of Level A, one more plate at a time: "what if one more plate came?" is the question.
+    B: [one(6, 2), one(7, 2), one(8, 2), one(9, 2), one(10, 2),   // more plates of 2, on from 5 × 2: each answer is 2 more, up to ten twos
+        one(3, 5), one(4, 5),                                      // plates of 5, on from 2 × 5: the fives he knows from the clock, 15 and 20
+        one(3, 4), one(4, 4), one(5, 4),                           // plates of 4, on from 2 × 4
+        one(4, 3), one(5, 3), one(6, 3)],                          // plates of 3, on from 3 × 3: the most counting by ones, so last
   },
 };
 function poolAdd(level) {
@@ -354,10 +364,14 @@ function poolTake(level) {
   for (let w = level === 'A' ? 2 : 6; w <= (level === 'A' ? 5 : 10); w++) for (let t = 1; t <= w; t++) out.push({ w, t });
   return out;
 }
-// Every fact with a total up to 10, at least two plates and at least two on each: eight of them.
-function poolMult() {
+// Every fact of the level with at least two plates and 2 to 5 on each: a total up to 10 (eight facts) or 11 to 20 (thirteen).
+// Never more than 5 on a plate: the dice shapes stop there, and a group of 6 or more is counted, not seen.
+function poolMult(level) {
   const out = [];
-  for (let a = 2; a <= 5; a++) for (let b = 2; b <= 5; b++) if (a * b <= 10) out.push({ a, b, c1: 0, c2: 1 });
+  for (let a = 2; a <= 10; a++) for (let b = 2; b <= 5; b++) {
+    const t = a * b;
+    if (level === 'A' ? t <= 10 : (t >= 11 && t <= 20)) out.push({ a, b, c1: 0, c2: 1 });
+  }
   return out;
 }
 function shuffle(arr) {
@@ -387,8 +401,8 @@ function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catc
 
 // The question games, each with its own facts, its own place in them, its own level on the dial, and its own
 // sequence state (the place in a pair, the comebacks, the shuffle bag), so nothing is lost when he switches games.
-// Groups of has one level for now, and its partner is the fact itself: a turn-around is never forced straight after
-// its partner, because plates cannot show why the totals match and he would answer from memory.
+// In groups of the partner is the fact itself: a turn-around is never forced straight after its partner, because plates
+// cannot show why the totals match and he would answer from memory.
 const newSeq = () => ({ sub: 0, last: null, forced: null, bag: [], comeback: [], fromPass: false });
 const games = {
   ask:  { mem: store.add,  PASS: PASS.add,  pool: poolAdd,  seq: newSeq(), partner: s => ({ a: s.b, b: s.a, c1: 1, c2: 0 }) },
@@ -454,9 +468,10 @@ function tone(f, { t = 0, dur = .5, type = 'triangle', vol = .5, to = 0 } = {}) 
   g.gain.exponentialRampToValueAtTime(.0001, s + dur);
   o.connect(g); g.connect(master); o.start(s); o.stop(s + dur + .05);
 }
-// Five notes (C D E G A), then the same again one octave up: the bottom row sounds like the top row.
+// Five notes (C D E G A), then the same again one octave up: the bottom row sounds like the top row. A count can reach 20
+// in Level B of groups of: 11 to 15 go up one more octave, and 16 to 20 stay there rather than climb into a squeal.
 const SCALE = [261.63, 293.66, 329.63, 392.00, 440.00];
-const freq = n => SCALE[(n - 1) % 5] * Math.pow(2, Math.floor((n - 1) / 5));
+const freq = n => SCALE[(n - 1) % 5] * Math.pow(2, Math.min(2, Math.floor((n - 1) / 5)));
 const sfx = {
   note(n)   { tone(freq(n), { dur: .55 }); tone(freq(n) * 2, { dur: .3, vol: .1, type: 'sine' }); },
   off(n)    { tone(freq(Math.max(1, n)) / 2, { dur: .3, vol: .4 }); },
@@ -487,14 +502,18 @@ const sfx = {
   read(i, quiet) { const k = quiet ? .4 : 1; tone([523.25, 659.25, 783.99][i], { dur: .6, vol: .35 * k }); if (i === 2) tone(1046.5, { t: .05, dur: .8, vol: .25 * k }); },
 };
 
-// Optional number words in a parent's voice: sounds/1.m4a to sounds/10.m4a (or .mp3, .wav).
+// Optional number words in a parent's voice: sounds/1.m4a to sounds/10.m4a (or .mp3, .wav), and 11 to 20 as well if he
+// plays Level B of groups of. A number without a file is simply not said.
 // They play only where a number is also shown: Play landings and the numbered count. Never on his own hops in "How many?".
 const words = [];
 (function findWords(exts) {
   if (!exts.length) return;
   const probe = new Audio();
   probe.addEventListener('canplaythrough', () => {
-    for (let n = 1; n <= 10; n++) { const w = new Audio(`sounds/${n}.${exts[0]}`); w.preload = 'auto'; words[n] = w; }
+    for (let n = 1; n <= 20; n++) {
+      const w = new Audio(`sounds/${n}.${exts[0]}`); w.preload = 'auto'; words[n] = w;
+      w.addEventListener('error', () => { words[n] = null; }, { once: true });
+    }
   }, { once: true });
   probe.addEventListener('error', () => findWords(exts.slice(1)), { once: true });
   probe.src = `sounds/1.${exts[0]}`;
@@ -509,7 +528,8 @@ function sayWord(n) { const w = words[n]; if (!w) return false; try { w.currentT
    There is no setting for it on the screen, on purpose. */
 const VOICE = false;
 const SAYING = { and: 'and', make: 'make' };   // the other choice: 'plus' and 'equals'
-const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
+               'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
 const synth = VOICE ? (window.speechSynthesis || null) : null;
 let voiceHeard = false, voiceFails = 0, utter = null;
 // iOS can lose its voice for good if the app goes to the background in the middle of a word
@@ -586,10 +606,15 @@ function homePos(zone, n, i) {
 }
 // Groups of: one centred row of plates, low in the room that the zones and the tray share, so the big numeral fits
 // above the row and the sentence and the number row never move. All the plates of a sum are one size.
+// Level B has more plates than the row has room for at that size. The whole row then shrinks to fit: plates, gaps, the
+// dice shapes and the food alike, so ten plates of 2 are ten small saucers in one row, never two rows. Level A never shrinks.
+const ROW = 11.6;   // the room for the row, in units: a little inside the 12 of the scene
 const plateSize = b => b <= 2 ? 2 : 2.6;
+const platePitch = b => plateSize(b) + (b <= 2 ? .25 : .5);
+const shrink = () => { const { a, b } = mult.sum; return Math.min(1, ROW / (a * platePitch(b))); };
 const band = () => { const z = rectIn($('#zones')), t = rectIn($('#trayWrap')); return { x: z.x + z.w / 2, top: z.y, bottom: t.y + t.h }; };
 function plateAt(i) {
-  const { a, b } = mult.sum, c = band(), pitch = plateSize(b) + (b <= 2 ? .25 : .5);
+  const { a, b } = mult.sum, c = band(), pitch = platePitch(b) * shrink();
   return { x: c.x + (i - (a - 1) / 2) * pitch * U, y: c.bottom - U * 1.45, s: 1 };
 }
 const overPlates = () => { const c = band(); return { x: c.x, y: c.top + U * .95 }; };
@@ -603,8 +628,8 @@ const DICE = {
   5: [[-.56, -.56], [.56, -.56], [0, 0], [-.56, .56], [.56, .56]],
 };
 function onPlate(i, k) {
-  const c = plateAt(i), b = mult.sum.b, [dx, dy] = DICE[b][k];
-  return { x: c.x + dx * U, y: c.y + dy * U, s: b <= 2 ? .9 : b === 5 ? .74 : .84 };
+  const c = plateAt(i), b = mult.sum.b, z = shrink(), [dx, dy] = DICE[b][k];
+  return { x: c.x + dx * U * z, y: c.y + dy * U * z, s: (b <= 2 ? .9 : b === 5 ? .74 : .84) * z };
 }
 function where(a) {
   if (a.at.t === 'tray') return trayPos(a.at.slot);
@@ -618,8 +643,10 @@ function buildTray(rows) {
   for (let i = 0; i < rows * 5; i++) { const c = document.createElement('div'); c.className = 'cell'; tray.appendChild(c); cells.push(c); }
 }
 // The buttons from..to. Level A's styling keys on the level, not on a count of buttons: take away has one more, the 0.
+// Eleven buttons (0 to 10) are one row a little smaller; twenty (1 to 20, Level B of groups of) are two rows of ten.
 function buildNumrow(from, to, levelA) {
-  numrow.innerHTML = ''; numrow.classList.toggle('a', levelA); numrow.classList.toggle('eleven', to - from >= 10);
+  const count = to - from + 1;
+  numrow.innerHTML = ''; numrow.classList.toggle('a', levelA); numrow.classList.toggle('eleven', count === 11); numrow.classList.toggle('twenty', count === 20);
   for (let i = from; i <= to; i++) { const b = document.createElement('button'); b.textContent = i; b.dataset.n = i; numrow.appendChild(b); }
 }
 
@@ -659,9 +686,11 @@ const wiggle = el => anim(el, [{ transform: 'rotate(0)' }, { transform: 'rotate(
 const pulse = (el, k = 1.35, ms = 600) => anim(el, [{ transform: 'scale(1)' }, { transform: `scale(${k})` }, { transform: 'scale(1)' }], { duration: ms, easing: 'ease-in-out' });
 const bounce = (a, ms) => anim(a.face, [{ transform: 'translateY(0) scale(1)' }, { transform: `translateY(${-U * .42}px) scale(1.12)` }, { transform: 'translateY(0) scale(1)' }], { duration: ms, easing: 'ease-in-out' });
 const popIn = (a, delay) => anim(a.face, [{ transform: 'scale(0)' }, { transform: 'scale(1.15)' }, { transform: 'scale(1)' }], { duration: 300, delay, fill: 'backwards' });
+// On the small food of a shrunken row (Level B of groups of) the number keeps a readable size; elsewhere k is 1.
 function showNum(a, n, ms) {
   a.num.textContent = n;
-  anim(a.num, [{ opacity: 0, transform: 'scale(.4)' }, { opacity: 1, transform: 'scale(1.1)', offset: .2 }, { opacity: 1, transform: 'scale(1)', offset: .7 }, { opacity: 0, transform: 'scale(1)' }], { duration: ms });
+  const k = Math.max(1, .6 / a.pos.s);
+  anim(a.num, [{ opacity: 0, transform: 'scale(.4)' }, { opacity: 1, transform: `scale(${k * 1.1})`, offset: .2 }, { opacity: 1, transform: `scale(${k})`, offset: .7 }, { opacity: 0, transform: `scale(${k})` }], { duration: ms });
 }
 // The last number means all of them: one big numeral over the whole tray. In groups of it is a little smaller and
 // sits above the row of plates: on the middle plate it would look like that plate's own number.
@@ -895,13 +924,14 @@ async function evaluate(n) {
   deal();
 }
 
-// About one object per second up to 5, quicker for bigger totals, never more than about 6 seconds in all.
+// About one object per second up to 5, quicker for bigger totals, never more than about 6 seconds in all (cap: Level B
+// of groups of counts up to 20, and gives the count a little longer, so that it stays slow enough to count along with).
 // row is what gets counted: everything in addition, what is left on the tray in take away.
 // Groups of counts by ones too, but plate by plate: per objects, then a short pause, and the last of each plate
 // stressed (1 2 · 3 4 · 5 6). The pauses are part of the 6 seconds. big shows the big numeral in its own place.
-async function recount(g, row, withNumbers, { per = 0, gap = 0, big = showBig } = {}) {
+async function recount(g, row, withNumbers, { per = 0, gap = 0, big = showBig, cap = 6000 } = {}) {
   const pauses = per ? (row.length / per - 1) * gap : 0;
-  const step = Math.min(1000, (6000 - pauses) / row.length);
+  const step = Math.min(1000, (cap - pauses) / row.length);
   await sleep(250);
   for (let i = 0; i < row.length; i++) {
     if (g !== gen) return;
@@ -1128,6 +1158,9 @@ function takeBeats() {
 // The same group, again and again. He taps an empty plate and a whole group lands on it: one tap is one group, where
 // in adding one tap was one car. In 3 × 2 the 3 counts plates and the 2 counts what is on each plate.
 const PLATE_GAP = 400;   // ms between plate sounds, dealt or read back: closer, and they run together into one
+// With 6 plates or more (Level B) the plates come a little closer, 0.3 s, still heard one by one: ten at 0.4 s would be
+// 4 seconds of plates before he may answer, and as long again in the read-back.
+const plateGap = a => a >= 6 ? 300 : PLATE_GAP;
 const mult = { sum: null, plates: [], apples: [], total: 0, asked: false, misses: 0, busy: false, pending: null, run: 0, runTimer: 0 };
 const landed = () => mult.plates.filter(p => p.state === 'full').length * mult.sum.b;
 const dishAnim = (p, frames, ms) => anim(p.dish, frames, { duration: ms, easing: 'ease-out' });
@@ -1151,20 +1184,20 @@ function multDeal() {
   numrow.classList.add('inert');
   numrow.querySelectorAll('button').forEach(b => b.classList.remove('good', 'soft'));
   enqueue(async () => {
-    const g = gen;
+    const g = gen, gap = plateGap(s.a);
     await sleep(500); if (g !== gen) return;
-    pulse(chips.n1, 1.35, PLATE_GAP * s.a + 200);
+    pulse(chips.n1, 1.35, gap * s.a + 200);
     for (let i = 0; i < s.a; i++) {
       const el = document.createElement('div'), dish = document.createElement('span');
       el.className = 'plate'; dish.className = 'dish'; el.appendChild(dish);
-      el.style.setProperty('--p', `calc(var(--u) * ${plateSize(s.b)})`);
+      el.style.setProperty('--p', `calc(var(--u) * ${plateSize(s.b) * shrink()})`);
       const p = { el, dish, i, state: 'empty', apples: [] };
       el._p = p; mult.plates.push(p);
       el.style.transform = T(plateAt(i));
       layer.insertBefore(el, layer.firstChild);   // under everything that lies or lands on it
       dishAnim(p, [{ transform: 'scale(0)' }, { transform: 'scale(1.12)' }, { transform: 'scale(1)' }], 300);
       sfx.plate();
-      await sleep(PLATE_GAP); if (g !== gen) return;
+      await sleep(gap); if (g !== gen) return;
     }
     mult.asked = true; numrow.classList.remove('inert');
   });
@@ -1228,7 +1261,11 @@ async function multEvaluate(n) {
     sfx.boop(); btn.classList.remove('soft'); void btn.offsetWidth; btn.classList.add('soft');
     await sleep(350); if (g !== gen) return;
     await multProof(); if (g !== gen) return;
-    await recount(g, mult.apples, mult.misses >= 2, { per: mult.sum.b, gap: 330, big: k => { glowPlates(); return showBig(k, overPlates(), 1.8); } });
+    // Level B: up to 20 to count, so the count gets a quarter second more per object past 10, and shorter pauses with many plates
+    await recount(g, mult.apples, mult.misses >= 2, {
+      per: mult.sum.b, gap: mult.sum.a >= 6 ? 220 : 330, cap: 6000 + Math.max(0, mult.total - 10) * 250,
+      big: k => { glowPlates(); return showBig(k, overPlates(), 1.8); },
+    });
     if (g !== gen) return;
     mult.busy = false; numrow.classList.remove('inert');
     return;
@@ -1252,7 +1289,8 @@ async function multEvaluate(n) {
 // food bounces together and the 2 pulses with it, every plate playing the same short figure: 2, and 2, and 2. This
 // is where the repeated addition lives: it is never written on the screen. Then the 6 pulses with all of it.
 function multBeats() {
-  const { a, b } = mult.sum, q = a >= 4 ? .75 : 1, tick = PLATE_GAP, each = 400 * q, beats = [];   // the groups a quarter shorter with 4 or 5 plates
+  // the groups a quarter shorter with 4 or 5 plates, and about half with 6 or more: ten plates still read back in under 6 s
+  const { a, b } = mult.sum, q = a >= 6 ? .55 : a >= 4 ? .75 : 1, tick = plateGap(a), each = 400 * q, beats = [];
   mult.plates.forEach((p, i) => beats.push({
     ms: tick, text: i ? '' : WORDS[a], sound: () => sfx.plate(),
     also: () => { if (!i) pulse(chips.n1, 1.35, tick * a); dishAnim(p, [{ transform: 'scale(1)' }, { transform: 'scale(1.1)' }, { transform: 'scale(1)' }], tick); },
@@ -1296,7 +1334,7 @@ function setMode(m) {
     paintChip(chips.n1, 0); paintChip(chips.n2, 1); plainChip(chips.total, false);
     buildPiles(); playSentence(false);
   } else if (isMult) {
-    buildTray(2); buildNumrow(1, 10, false);
+    buildTray(2); buildNumrow(1, mem.level === 'A' ? 10 : 20, false);   // Level B: totals up to 20, so 1 to 20 in two rows of ten
     games.mult.seq.sub = 0;
     multDeal();
   } else {
@@ -1319,8 +1357,10 @@ $('#tumble').addEventListener('pointerdown', () => { if (mode === 'play') playTu
 numrow.addEventListener('pointerdown', e => { const b = e.target.closest('button'); if (b && mode !== 'play') answer(+b.dataset.n); });
 
 // The parent dial: press and hold, so he does not open it by accident. It opens the parent panel: the card of this
-// game and, in ➕ and ➖, the level. It only opens while the game is still (no sum arriving, no count or read-back
-// playing), so nothing sounds or changes under the panel, and closing it loses nothing.
+// game and, in the question games, the level. It only opens while the game is still (no sum arriving, no count or
+// read-back playing), so nothing sounds or changes under the panel, and closing it loses nothing.
+// The two levels, in each game's own numbers: in ➕ and ➖ they are the totals and the wholes, in ✖️ the totals.
+const LEVELS = { ask: ['A · up to 5', 'B · 6 to 10'], take: ['A · up to 5', 'B · 6 to 10'], mult: ['A · up to 10', 'B · 11 to 20'] };
 const parent = $('#parent');
 const still = () => {
   if (mode === 'play') return true;
@@ -1334,9 +1374,9 @@ const still = () => {
     const c = CARDS[mode], row = (k, v) => `<dt>${k}</dt><dd>${v}</dd>`;
     parent.querySelector('h2').textContent = c.title;
     parent.querySelector('dl').innerHTML = row('Say', c.say.join('<br>')) + row('Ask', c.ask.join('<br>')) + row('Watch', c.watch);
-    const leveled = mode === 'ask' || mode === 'take';   // Play has no level, and groups of has one for now
+    const leveled = !!games[mode];   // Play has no level
     levels.classList.toggle('hide', !leveled);
-    if (leveled) levels.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.l === games[mode].mem.level));
+    if (leveled) levels.querySelectorAll('button').forEach((b, i) => { b.textContent = LEVELS[mode][i]; b.classList.toggle('on', b.dataset.l === games[mode].mem.level); });
     hideHand(); parent.classList.add('on'); openedAt = performance.now();
   }
   dial.addEventListener('pointerdown', () => {
@@ -1351,7 +1391,7 @@ const still = () => {
     if (performance.now() - openedAt < 300) return;
     parent.classList.remove('on');
     const b = e.target.closest('.levels button');
-    if (!b || (mode !== 'ask' && mode !== 'take')) return;
+    if (!b || !games[mode]) return;
     const g = games[mode];
     if (b.dataset.l === g.mem.level) return;
     g.mem.level = b.dataset.l; save(); resetSeq(g); sfx.tok(); setMode(mode);
@@ -1365,10 +1405,10 @@ function showHand() {
   const st = game();
   if (mode !== 'play' && (st.busy || Q.pending)) return;
   let from, to, glyph = '👆';
-  const sweep = () => {   // sweep along the whole number row, never point at one number
+  const sweep = () => {   // sweep along the whole number row, never point at one number. Two rows: along the top one.
     const bs = numrow.querySelectorAll('button'); glyph = '👇';
     from = centre(bs[0]); to = centre(bs[bs.length - 1]);
-    from.y -= U * 1.1; to.y -= U * 1.1;
+    from.y -= U * 1.1; to.y = from.y;
   };
   if (mode === 'play') {
     if (play.reserved > 0) return;

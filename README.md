@@ -20,16 +20,18 @@ again. The thinking behind every choice is in [PLAN.md](PLAN.md),
   him. `0` is on the row: 5 take away 5 leaves none. The stars and the trophy are shared with "How many?".
 - ✖️ **How many altogether?:** `3 × 2 = ?` arrives with three empty plates. He taps a plate and a whole
   group of 2 drops onto it: one tap is one group. Then he taps how many there are altogether, or answers
-  straight away and the app fills the plates for him. Totals up to 10, eight facts. The stars and the
-  trophy are shared with the other two question games.
+  straight away and the app fills the plates for him. Level A has totals up to 10, eight facts. Level B has
+  totals from 11 to 20, thirteen facts: more plates, never more than 5 on each, in a row that shrinks to fit,
+  and the numbers 1 to 20 in two rows of ten. The stars and the trophy are shared with the other two
+  question games.
 
 The small round letter in the corner is the parent dial. **Press and hold it** for a second and the parent
-panel opens: the few lines to say, ask and watch for in the game he is in, and in ➕ and ➖ the level, Level
-A (up to 5) or Level B (6 to 10). Tap the other level to switch, or tap anywhere else to close. It only
-opens while the game is still, so nothing plays under it and closing it loses nothing. Each question game
-has its own level, and the dial shows the level of the game he is in (in Play, the addition level). ✖️ has
-one level for now, so its panel has only the card. The app remembers the levels and his place in the sums
-of each game.
+panel opens: the few lines to say, ask and watch for in the game he is in, and the level: in ➕ and ➖ Level
+A (up to 5) or Level B (6 to 10), in ✖️ Level A (totals up to 10) or Level B (11 to 20). Tap the other level
+to switch, or tap anywhere else to close. It only opens while the game is still, so nothing plays under it
+and closing it loses nothing. Each question game has its own level, and the dial shows the level of the
+game he is in (in Play, the addition level). The app remembers the levels and his place in the sums of each
+game.
 
 ## Parent card
 
@@ -70,6 +72,8 @@ For "How many altogether?" (the number of plates always comes first):
   "you tapped 3 times. 3 times 2 is 6."
 - Never "3 plus 2", "times makes it bigger" or "tables".
 - If 2 × 3 comes right after 3 × 2 and he says "the same!", ask **"is it the same picture?"**
+- At Level B the same three beats, with bigger numbers: **"6 plates. 2 on each. 12 mangoes."** With plates
+  of 5, count the plates with him on the clock's numbers: "5, 10, 15, 20."
 - Away from the iPad: socks in pairs, wheels on cars, legs on chairs, fingers on hands, each with "how
   many on each?".
 
@@ -87,10 +91,11 @@ stays on the screen):
 - **The mistake to watch for:** `2 × 3` drawn as one circle with 2 and one with 3. He is reading the `×`
   as `+`. Go back to the two questions.
 - **The other way round, now and then:** you draw 3 circles with 2 dots in each, and he says the sum.
-- **The big challenge, much later:** `3 × 4` on paper. The app never asks it (its totals stop at 10), and
-  its two numbers differ, so you can see which one became circles. Three circles of 4 is the pass; the 12
-  matters less, and a miscount to 11 is still a pass. Call it a challenge, not an exam: if it goes wrong,
-  it only shows what to practise.
+- **The big challenge, much later:** `3 × 4` on paper. At Level A the app never asks it (its totals stop at
+  10), and its two numbers differ, so you can see which one became circles. Three circles of 4 is the pass;
+  the 12 matters less, and a miscount to 11 is still a pass. Call it a challenge, not an exam: if it goes
+  wrong, it only shows what to practise. Level B asks `3 × 4` and `4 × 3`, so do this before he moves up, or
+  pick a fact the app never asks, such as `3 × 6` (it never puts more than 5 on a plate).
 - **Judge readiness by what you see, not by "I'm confident"**: he answers the two questions without a
   slip, and he knows one more plate is 2 more, not 1 more.
 - **One pass is not enough.** A few days later, try `4 × 3`: four circles of 3, not three of 4, shows he
@@ -105,13 +110,15 @@ or tap and guess, does he answer before moving anything, and does he touch the o
 count them? In "How many left?": does he answer with the number taken away, does he stop by himself or
 only when the places are full, and does a car ever leave when he only meant to count it? In "How many
 altogether?": does he answer 5 for `3 × 2` (he read the `×` as `+`), does he mix up the plates and how
-many on each, and does he count by ones or say "2, 4, 6"?
+many on each, and does he count by ones or say "2, 4, 6"? At Level B: does he count the plates of 2 in
+twos and the plates of 5 in fives, and does he find 12 under the 2 on the number row without searching?
 
 ## Number words in your own voice (optional)
 
 The app uses notes, not a computer voice. If he often plays alone, record "one" to "ten" on a phone and
 put the ten files in a `sounds/` folder next to `index.html`, named `1.m4a` to `10.m4a` (`.mp3` and `.wav`
-work as well). The app then says the new total on every landing in Play, and counts aloud in the numbered
+work as well; `11.m4a` to `20.m4a` too, if you like, for Level B of ✖️, and a number without a file is simply
+not said). The app then says the new total on every landing in Play, and counts aloud in the numbered
 count after a second miss. It never counts his own hops in "How many?", because that would do the
 thinking for him.
 

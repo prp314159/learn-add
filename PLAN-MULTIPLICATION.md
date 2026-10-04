@@ -5,7 +5,8 @@ The earlier plans are [PLAN.md](PLAN.md) and [PLAN-SUBTRACTION.md](PLAN-SUBTRACT
 
 The recommendation in one line: **a fourth game, ✖️, on the same screen, about equal groups, not tables.**
 He taps an empty plate and a whole group lands on it: **one tap is one group**, where in adding one tap was
-one car. Then he finds how many there are altogether. Totals up to 10, eight facts.
+one car. Then he finds how many there are altogether. Totals up to 10, eight facts. Level B, added later, goes on to
+20: see "Level B: up to 20".
 
 ## Is it a good idea?
 
@@ -102,8 +103,9 @@ game taught him anything.
   row. No sparkle bits, and no fanfare at 10: that belongs to the full tray.
 - **No `1 ×`, `× 1` or zero.** In `1 × 4` and `4 × 1` the answer is already on the screen, so matching
   wins. They come with rows and columns (under "Next").
-- **The parent dial is hidden in this game.** There is one level for now, and a dial that does nothing is
-  one more thing to wonder about. It appears with "No plates ready".
+- **The dial shows this game's level**, and the parent panel behind it switches between Level A (totals up to 10) and
+  Level B (11 to 20), as in the other two question games. At first, with one level, the dial was hidden here: a dial
+  that does nothing is one more thing to wonder about.
 
 ## Which sums, in what order
 
@@ -119,6 +121,47 @@ eight, never the same fact twice in a row. Turn-around pairs (3 × 2 then 2 × 3
 back: plates cannot show why the totals match, and straight after 3 × 2 he would answer 2 × 3 from
 memory. Both orders are in the shuffle, never forced together; if they meet by chance, see the parent
 card. Eight facts will become recall within days, and that is fine once the plates gave them meaning.
+
+## Level B: up to 20
+
+The "Up to 20" of the "Next" list, as Level B of this game, on the dial like the other two. **Totals 11 to 20, still 2
+to 5 on each plate, so it is the plates that grow.** Thirteen facts:
+
+| on each | plates          | totals             |
+|---------|-----------------|--------------------|
+| 2       | 6, 7, 8, 9, 10  | 12, 14, 16, 18, 20 |
+| 3       | 4, 5, 6         | 12, 15, 18         |
+| 4       | 3, 4, 5         | 12, 16, 20         |
+| 5       | 3, 4            | 15, 20             |
+
+- **Never more than 5 on a plate.** The dice shapes stop at 5, and a group of 6 or more is counted, not seen: the whole
+  point of a plate is that its group is one thing at a glance. So 2 × 6 to 2 × 10 are not asked, and 11, 13, 17 and 19
+  never come up (they have no equal groups at all; that is a conversation for much later).
+- **The row shrinks to fit.** Ten plates of 2 do not fit the row at the size of Level A, and this plan says one row,
+  never two. So the whole row shrinks, plates, gaps, shapes and food alike, until it fits inside the scene: ten small
+  saucers in one row. The smallest plate is about a unit across (10 × 2), with food about half a unit. Level A never
+  shrinks: the fit is only for rows that need it. This is the "something smaller" of the request: the food stays,
+  smaller, rather than turning into dots, so the colour of the `2` and the treat after a trophy keep their meaning.
+- **The number row is 1 to 20, in two rows of ten**, 11 under 1, so a teen is seen as ten and some. One row of twenty
+  would be too small for his finger; two rows fit the height of the row at a size a little smaller than the ten of
+  Level A. The row keeps the low numbers, because the mistake to catch, 7 for `3 × 4` (the `×` read as `+`), must be
+  tappable.
+- **The first pass**, each once, in four runs that each go on from a fact of Level A by one more plate at a time, so
+  "what if one more plate came?" stays the question: 6 × 2, 7 × 2, 8 × 2, 9 × 2, 10 × 2 (on from 5 × 2); 3 × 5, 4 × 5
+  (on from 2 × 5, the fives he knows from the clock); 3 × 4, 4 × 4, 5 × 4 (on from 2 × 4); 4 × 3, 5 × 3, 6 × 3 (on
+  from 3 × 3; the most counting by ones, so last). Then the shuffle of all thirteen, as in Level A. No turn-around pair
+  is adjacent in the pass.
+- **Time.** With 6 plates or more, the plates come 0.3 s apart instead of 0.4 (ten at 0.4 s would be four seconds
+  before he may answer), and in the read-back the group beats are about half as long, so even 10 × 2 reads back in
+  under 6 s. The help after a miss counts up to 20: it gets a quarter of a second more per object past 10 (8.5 s for
+  twenty, instead of 6) and shorter pauses between plates when there are many, so it stays slow enough to count along
+  with. From the second miss, the numbers on the food keep a readable size on a shrunken row.
+- **Notes.** A count to 20 climbs the same ladder of five notes; 11 to 15 go up one more octave, and 16 to 20 stay
+  there rather than squeal.
+- **The parent.** The same three beats with bigger numbers: "6 plates. 2 on each. 12 mangoes." With plates of 5, count
+  the plates with him on the clock's numbers: "5, 10, 15, 20." Watch whether he counts the plates of 2 in twos, and
+  whether he finds 12 under the 2 on the number row without searching.
+- **Saved** as `store.mult.level` and `pos.B`, under the same key; an old save loads at Level A.
 
 ## The parent is part of the design
 
@@ -149,10 +192,10 @@ always comes first.
 ## Next (after watching him, none of it in the first version)
 
 1. **No plates ready.** He reads the `3` and taps out the plates himself: the first place he must use a
-   number on his own. Level B of this game, and the dial appears.
+   number on his own. A switch of its own in the parent panel, at either level.
 2. **Rows and columns.** The plates slide into a rectangle that turns a quarter: 3 × 2 becomes 2 × 3 with
    nothing moving. The real picture of the turn-around; `1 × 4` and `4 × 1` come with it.
-3. **Up to 20.** A longer number row, and the fives he knows from the clock.
+3. **Up to 20.** Done, as Level B: see "Level B: up to 20".
 
 ## Tech
 
@@ -181,6 +224,11 @@ always comes first.
   to the next food. Never called from ✖️: `glowCells`, `tidy`, `bringRest`, `trayPos`, `bits`.
 - **Saved:** `store.mult = { level: 'A', pos: { A: 0 } }` under the same key `learn-add-v1`. An old save
   loads with `mult` at its start. Stars and trophy are shared. About 200 new lines, ten edited spots.
+- **Level B:** `PASS.mult.B` and `poolMult(level)`; `shrink()`, from the sum, scales the plate (`--p`), the pitch, the
+  dice offsets and the food; `buildNumrow(1, 20)` gets the `twenty` class, a grid of two rows of ten; `plateGap(a)`
+  for the deal and the read-back, and a shorter group beat in `multBeats`; `recount` takes a `cap`; `showNum` keeps a
+  minimum size; `freq` stops two octaves up; `WORDS` and the recordings go to twenty; the panel's level buttons take
+  their words from `LEVELS`, and the dial handler works for every game in `games`.
 - **Re-test:** Play (boxes, tumble, sentence); ➕ at A and B (proof, tidy, both misses, the read-back and
   the big numeral, fanfare, trophy); ➖ (the question's wait, undo, both misses, all gone and the big `0`,
   the read-back); switching games mid animation; the dial in every game; leaving ✖️ brings back the tray,
@@ -200,4 +248,6 @@ always comes first.
    stay in the other games. No cookies: the chocolate chips on a cookie are a small group he could count.
 4. **✖️ is always available**, like ➕ and ➖ (at first it was earned with a trophy in ➖; that was dropped).
 5. Every other choice (the plate tap, no waiting places, the colours, one sentence, the help, the facts,
-   the hidden dial) is explained once, in "Why this design" and "Which sums".
+   the dial) is explained once, in "Why this design" and "Which sums".
+6. **Level B goes to 20** with more plates, never more than 5 on a plate, in one row that shrinks to fit, and the
+   numbers 1 to 20 in two rows of ten. See "Level B: up to 20".
